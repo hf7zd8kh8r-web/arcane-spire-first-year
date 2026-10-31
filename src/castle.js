@@ -75,7 +75,8 @@ export function buildCastle() {
   const colliders = [];
 
   // Ground layers
-  B.box(240, 0.5, 240, GRASS, mat(0, -0.25, 0), { mat: 'grass' });
+  B.box(520, 0.5, 520, GRASS, mat(0, -0.25, 0), { mat: 'grass' });
+  B.box(700, 0.4, 700, GRASS2, mat(0, -0.45, 0), { mat: 'grass' });
   // darker grass patches
   for (let i = 0; i < 12; i++) {
     const gx = (i % 4) * 40 - 60, gz = Math.floor(i / 4) * 50 - 40;
@@ -300,6 +301,88 @@ export function buildCastle() {
   });
 
 
+
+  // ========== OUTER WORLD (original Crescentwick countryside) ==========
+  // Edgewood Forest (east)
+  for (let i = 0; i < 55; i++) {
+    const x = 110 + (i % 11) * 9 + (i % 3) * 2;
+    const z = -80 + Math.floor(i / 11) * 14 + (i % 5) * 1.5;
+    tree(B, x, z, 0.85 + (i % 4) * 0.2);
+  }
+  spots.edgewood = { x: 140, y: 0, z: -40 };
+  spots.edgewoodShrine = { x: 155, y: 0, z: -20 };
+  B.cyl(3.5, 3.5, 0.5, STONE3, mat(155, 0.3, -20), { seg: 12 });
+  B.box(1.2, 2.4, 0.4, STONE2, mat(155, 1.5, -20));
+  B.sphere(0.45, GOLD, mat(155, 2.9, -20), { mat: 'emissive' });
+
+  // Mistbrook Hamlet (southwest) — cottages, well, market stall
+  const hamlet = { x: -130, z: 95 };
+  spots.mistbrook = hamlet;
+  [[-8, -6], [6, -4], [-4, 8], [10, 6], [-12, 4]].forEach(([ox, oz], i) => {
+    const hx = hamlet.x + ox, hz = hamlet.z + oz;
+    B.box(6 + (i % 2), 3.2, 5, WOOD, mat(hx, 1.6, hz), { mat: 'wood' });
+    B.box(7, 0.35, 5.5, ROOF2, mat(hx, 3.5, hz, 0.35, 0, 0), { mat: 'roof' });
+    B.box(1.0, 1.8, 0.2, WOOD2, mat(hx, 1.0, hz + 2.6));
+    B.box(0.7, 0.9, 0.1, GLASS, mat(hx + 1.5, 1.8, hz + 2.55), { mat: 'glass' });
+  });
+  B.cyl(1.4, 1.5, 0.9, STONE3, mat(hamlet.x, 0.5, hamlet.z), { seg: 12 });
+  B.cyl(0.15, 0.15, 2.2, WOOD2, mat(hamlet.x, 1.8, hamlet.z));
+  B.box(4, 0.15, 2.5, WOOD, mat(hamlet.x + 14, 1.2, hamlet.z - 2), { mat: 'wood' });
+  B.box(0.2, 2.2, 0.2, WOOD2, mat(hamlet.x + 12.5, 1.2, hamlet.z - 2));
+  B.box(0.2, 2.2, 0.2, WOOD2, mat(hamlet.x + 15.5, 1.2, hamlet.z - 2));
+  B.box(3.2, 0.15, 2.6, ROOF3, mat(hamlet.x + 14, 2.4, hamlet.z - 2), { mat: 'roof' });
+  spots.mistbrookMarket = { x: hamlet.x + 14, y: 0, z: hamlet.z - 2 };
+
+  // Silverpath road from gate to Mistbrook + Edgewood
+  for (let i = 0; i < 18; i++) {
+    B.box(5, 0.22, 6, PATH, mat(-20 - i * 6, 0.05, 70 + i * 1.2), { outline: false });
+  }
+  for (let i = 0; i < 16; i++) {
+    B.box(6, 0.22, 5, PATH, mat(50 + i * 6, 0.05, 20 - i * 3), { outline: false });
+  }
+
+  // North cliffs / windmill ridge
+  for (let i = 0; i < 8; i++) {
+    B.box(14, 3 + (i % 3), 10, STONE4, mat(-40 + i * 18, 1.2, -130), { mat: 'stoneDark' });
+  }
+  B.cyl(2.2, 2.4, 10, STONE, mat(20, 6, -125), { seg: 12, mat: 'stone' });
+  B.cone(3, 3.5, ROOF, mat(20, 12.5, -125), { seg: 10, mat: 'roof' });
+  B.box(10, 0.35, 1.2, WOOD, mat(20, 10, -125), { mat: 'wood' });
+  B.box(1.2, 0.35, 10, WOOD, mat(20, 10, -125), { mat: 'wood' });
+  spots.windmill = { x: 20, y: 0, z: -125 };
+  spots.northridge = { x: 0, y: 0, z: -130 };
+
+  // Hollowmere Pond (northwest)
+  B.cyl(18, 18, 0.5, WATER, mat(-120, -0.1, -70), { seg: 24, outline: false });
+  B.cyl(14, 14, 0.35, 0x3a78a8, mat(-120, 0.1, -70), { seg: 20, outline: false });
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    tree(B, -120 + Math.cos(a) * 22, -70 + Math.sin(a) * 22, 0.7);
+  }
+  spots.hollowmere = { x: -120, y: 0, z: -70 };
+  spots.hollowDock = { x: -108, y: 0, z: -70 };
+  B.box(6, 0.35, 2.5, WOOD, mat(-108, 0.3, -70), { mat: 'wood' });
+
+  // Ancient stone circle (south-east meadow)
+  for (let i = 0; i < 9; i++) {
+    const a = (i / 9) * Math.PI * 2;
+    B.box(1.2, 3.2 + (i % 3) * 0.4, 0.8, STONE3, mat(95 + Math.cos(a) * 10, 1.6, 110 + Math.sin(a) * 10), { mat: 'stone' });
+  }
+  B.cyl(2, 2, 0.4, STONE2, mat(95, 0.25, 110), { seg: 10 });
+  spots.stonecircle = { x: 95, y: 0, z: 110 };
+
+  // Bridge over creek east of lake
+  B.box(12, 0.4, 3.5, WOOD, mat(-95, 0.5, 40), { mat: 'wood' });
+  B.box(0.3, 1.4, 3.5, WOOD2, mat(-100, 1.0, 40));
+  B.box(0.3, 1.4, 3.5, WOOD2, mat(-90, 1.0, 40));
+  B.cyl(8, 8, 0.35, WATER, mat(-95, -0.2, 40), { seg: 16, outline: false });
+  spots.creekBridge = { x: -95, y: 0, z: 40 };
+
+  // Distant hills (silhouette)
+  for (let i = 0; i < 10; i++) {
+    B.cyl(18 + (i % 3) * 6, 22, 8 + (i % 4) * 3, GRASS2, mat(-200 + i * 45, 2, 180 - (i % 2) * 40), { seg: 10, outline: false });
+  }
+
   // Moonrail platform (train arrival — original)
   B.box(18, 0.6, 6, STONE3, mat(0, 0.35, 72), { mat: 'stone' });
   B.box(16, 0.15, 4.5, WOOD, mat(0, 0.7, 72), { mat: 'wood' });
@@ -347,5 +430,9 @@ export function buildCastle() {
 export function groundY(x, z) {
   const dl = Math.hypot(x + 75, z - 58);
   if (dl < 24) return -0.5;
+  const hm = Math.hypot(x + 120, z + 70);
+  if (hm < 16) return -0.45;
+  const ck = Math.hypot(x + 95, z - 40);
+  if (ck < 7) return -0.35;
   return 0;
 }

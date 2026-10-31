@@ -158,3 +158,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c1020;color:#f0e8d
 @media(min-width:900px){
   #dpad,#unfreezeBtn{display:none}
 }
+
+.pickgrid{display:flex;flex-wrap:wrap;gap:6px;max-height:220px;overflow:auto;margin:8px 0}
+.pickgrid button{font-size:.72rem;padding:6px 8px}
+.pickgrid button.on{outline:2px solid #c8a050}
+.srow button{margin-left:8px;font-size:.7rem;padding:4px 8px}
+#spells .sp.empty{opacity:.35}

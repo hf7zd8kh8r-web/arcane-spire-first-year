@@ -10,11 +10,10 @@ import { Secrets } from './secrets.js';
 import { Quests } from './quests.js';
 import { Net } from './net.js';
 import { makeTutor, makeStudent, makeClassmate } from './chars.js';
-import { HOUSES, SPELLS, HIT_CAP } from './data.js';
+import { HOUSES, SPELLS, HIT_CAP, SPELL_ORDER} from './data.js';
 import { CreatureSystem } from './creatures.js';
 import { Cutscenes } from './cutscenes.js';
 import { Schedule } from './schedule.js';
-import { CardBattle } from './cardbattle.js';
 import { Benches } from './benches.js';
 import * as ST from './state.js';
 
@@ -38,7 +37,7 @@ export class Game {
     this.creatures = new CreatureSystem(this);
     this.cutscenes = new Cutscenes(this);
     this.schedule = new Schedule(this);
-    this.cards = new CardBattle(this);
+    this.cards = { open(){}, close(){} }; // card battles removed — spell loadout instead
     this.benches = new Benches(this);
     this.arenaMesh = makeArenaMesh();
     this.scene.add(this.arenaMesh);
@@ -55,6 +54,20 @@ export class Game {
     });
     applyQuality();
     setUnfreezeHandler(() => this.unfreezeAll());
+  }
+
+
+  _afterUnlock() {
+    this.save.spells = [...this.spells.unlocked];
+    // Fill empty loadout slots with newly unlocked (keep player picks)
+    for (const id of SPELL_ORDER) {
+      if (!this.spells.unlocked.has(id)) continue;
+      if (this.spells.loadout.includes(id)) continue;
+      const slot = this.spells.loadout.findIndex(x => !x);
+      if (slot < 0) break;
+      this.spells.loadout[slot] = id;
+    }
+    this.spells.persistLoadout();
   }
 
   toast(msg, k) { this.ui.toast(msg, k); }
@@ -95,6 +108,7 @@ export class Game {
     this.schedule.ensure();
     this.creatures.ensureSave();
     this.spells.unlocked = new Set(save.spells || ['sparkbolt']);
+    this.spells.syncFromSave(save);
     if (save.house) this.player.rebuild(save.house);
     else this.player.rebuild('emberforge');
     if (!save.sorted) { this.player.pos.set(0, 0, 18); this.player.yaw = Math.PI; }
@@ -211,7 +225,7 @@ export class Game {
   onSpellCast(id) {
     this.quests.onSpellCast(id);
     if (!this.save.spells.includes(id) && this.spells.unlocked.has(id)) {
-      this.save.spells = [...this.spells.unlocked];
+      this._afterUnlock();
     }
   }
 
@@ -302,19 +316,19 @@ export class Game {
           this.spells.unlock('wandrift');
           this.spells.unlock('hovercharm');
           this.toast('Brindle teaches Wandrift & Hovercharm!');
-          this.save.spells = [...this.spells.unlocked];
+          this._afterUnlock();
           this.saveGame();
         }
         if (n.id === 'brindle') this.spells.unlock('stunflare');
         if (n.id === 'archivist') {
           // unlock a few library spells
           ['moonbolt', 'moonveil', 'aegis'].forEach(id => this.spells.unlock(id));
-          this.save.spells = [...this.spells.unlocked];
+          this._afterUnlock();
           this.toast('Archivist Moss shares three Moon-school workings');
           this.saveGame();
         }
         if (n.id === 'rowan') {
-          this.toast('Rowan: "Tame Edgewood creatures — rescue plants for training items."');
+          this.toast('Rowan: "Wander Edgewood — rescue plants, meet wild spirits. No card fights."');
         }
         return;
       }
@@ -333,7 +347,7 @@ export class Game {
     for (const [id, sp] of Object.entries(SPELLS)) {
       if (sp.unlock <= y - 1) this.spells.unlock(id);
     }
-    this.save.spells = [...this.spells.unlocked];
+    this._afterUnlock();
     this.saveGame();
     this.toast(`Welcome to Year ${y}`);
   }
@@ -355,7 +369,7 @@ export class Game {
       for (const [id, sp] of Object.entries(SPELLS)) {
         if (sp.unlock <= this.save.lvl - 1) this.spells.unlock(id);
       }
-      this.save.spells = [...this.spells.unlocked];
+      this._afterUnlock();
     }
 
     this.spells.update(dt);

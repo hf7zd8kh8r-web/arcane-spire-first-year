@@ -1,5 +1,5 @@
 import { HOUSES, SPELLS, SCHOOL, DUELISTS, QUESTS, SPELL_COUNT } from './data.js';
-import { isTouch } from './engine.js';
+import { isTouch, Q, qset, applyQuality } from './engine.js';
 import { PERIODS } from './schedule.js';
 
 export class UI {
@@ -51,8 +51,9 @@ export class UI {
     const g = this.game; if (!g) return;
     const row = document.getElementById('spells');
     if (!row) return;
-    const known = g.spells.known();
+    const known = g.spells.loadout; // 10 slots (may include empties)
     row.innerHTML = known.map((id, i) => {
+      if (!id || !SPELLS[id]) return `<button class="sp empty" data-i="${i}" title="Empty slot"><b>·</b><small>${i + 1}</small></button>`;
       const sp = SPELLS[id];
       const cd = g.spells.cds[id] || 0;
       const on = g.spells.active === id ? 'on' : '';
@@ -79,14 +80,15 @@ export class UI {
       <div class="card">
         <h2>${SCHOOL.title}</h2>
         <button data-act="spellbook">📖 Spellbook (${known}/${SPELL_COUNT})</button>
+        <button data-act="loadout">✦ Spell Loadout (10)</button>
         <button data-act="quests">📜 Quests</button>
         <button data-act="duelclub">⚔ Duel Club</button>
-        <button data-act="cards">🃏 Creature Cards</button>
         <button data-act="timetable">🗓️ Timetable</button>
         <button data-act="aether">🧹 Aetherchase</button>
         <button data-act="travel">🪑 Bench Travel</button>
         <button data-act="yearup">🌙 Advance Year</button>
         <button data-act="peers">👥 Duo / Chamber</button>
+        <button data-act="quality">✨ Quality: ${Q.auto ? 'Auto' : Q.level}</button>
         <button data-act="close">Close</button>
       </div>`;
   }
@@ -96,14 +98,47 @@ export class UI {
     const g = this.game;
     const panel = document.getElementById('panel');
     panel.style.display = 'flex'; panel.style.pointerEvents = 'auto';
-    const known = g.spells.allKnown ? g.spells.allKnown() : [...g.spells.unlocked];
+    const known = g.spells.allKnown();
     const lockedN = SPELL_COUNT - known.length;
+    const lo = new Set(g.spells.loadout.filter(Boolean));
     const rows = known.map(id => {
       const sp = SPELLS[id];
-      return `<div class="srow"><b>${sp.icon} ${sp.name}</b><span>${sp.desc} · ${sp.kind}</span></div>`;
+      const on = lo.has(id);
+      const combat = ['attack','fire','ice','lightning','stun','disarm','control','earth','water','air','light','dark'].includes(sp.kind);
+      return `<div class="srow ${on ? 'on' : ''}"><b>${sp.icon} ${sp.name}</b>
+        <span>${sp.desc} · ${sp.kind}${combat ? ' · duel-only' : ' · anytime'}</span>
+        <button data-act="toggleEquip" data-id="${id}" type="button">${on ? 'Unequip' : 'Equip'}</button></div>`;
     }).join('');
     panel.innerHTML = `<div class="card wide"><h2>Spellbook · ${known.length}/${SPELL_COUNT}</h2>
-      ${rows}<p class="dim">${lockedN} workings still sealed — attend classes, duel, and explore.</p>
+      <p class="dim">Equip up to 10 for your loadout. Combat workings fire only in duels.</p>
+      ${rows}<p class="dim">${lockedN} sealed. <button data-act="loadout" type="button">Edit loadout slots</button></p>
+      <button data-act="close">Close</button></div>`;
+  }
+
+  openLoadout() {
+    this.modal = 'loadout';
+    const g = this.game;
+    const panel = document.getElementById('panel');
+    panel.style.display = 'flex'; panel.style.pointerEvents = 'auto';
+    const slots = g.spells.loadout.map((id, i) => {
+      const sp = id && SPELLS[id];
+      return `<div class="srow"><b>Slot ${i + 1}</b>
+        <span>${sp ? `${sp.icon} ${sp.name} (${sp.kind})` : '— empty —'}</span>
+        ${id ? `<button data-act="unequipSlot" data-i="${i}" type="button">Clear</button>` : ''}
+      </div>`;
+    }).join('');
+    const known = g.spells.allKnown();
+    const picks = known.map(id => {
+      const sp = SPELLS[id];
+      const on = g.spells.loadout.includes(id);
+      return `<button data-act="equipSpell" data-id="${id}" type="button" class="${on ? 'on' : ''}">${sp.icon} ${sp.name}</button>`;
+    }).join('');
+    panel.innerHTML = `<div class="card wide"><h2>Spell Loadout · 10 slots</h2>
+      <p class="dim">Hotbar uses these. Combat spells only work in Duel Club / challenges.</p>
+      ${slots}
+      <h3>Known workings</h3>
+      <div class="pickgrid">${picks}</div>
+      <button data-act="spellbook">Full book</button>
       <button data-act="close">Close</button></div>`;
   }
 
@@ -148,10 +183,47 @@ export class UI {
   act(a, el) {
     const g = this.game;
     if (a === 'close') this.close();
+    else if (a === 'quality') {
+      const order = ['auto', 'low', 'med', 'high'];
+      const cur = Q.auto ? 'auto' : Q.level;
+      const next = order[(order.indexOf(cur) + 1) % order.length];
+      qset(next); applyQuality();
+      this.game.toast(`Graphics: ${next}`);
+      this.openMenu();
+    }
     else if (a === 'spellbook') this.openSpellbook();
+    else if (a === 'loadout') this.openLoadout();
     else if (a === 'quests') this.openQuests();
     else if (a === 'duelclub') this.openDuelClub();
-    else if (a === 'cards') { this.close(); g.cards.open(); }
+    else if (a === 'toggleEquip') {
+      const id = el.dataset.id;
+      if (g.spells.loadout.includes(id)) {
+        const i = g.spells.loadout.indexOf(id);
+        g.spells.unequip(i);
+      } else {
+        if (g.spells.loadout.filter(Boolean).length >= 10) g.toast('Loadout full — clear a slot first');
+        else g.spells.equip(id);
+      }
+      g.saveGame?.();
+      this.openSpellbook();
+    }
+    else if (a === 'equipSpell') {
+      const id = el.dataset.id;
+      if (g.spells.loadout.includes(id)) {
+        g.spells.unequip(g.spells.loadout.indexOf(id));
+      } else if (g.spells.loadout.filter(Boolean).length >= 10) {
+        g.toast('Loadout full (10) — clear a slot');
+      } else {
+        g.spells.equip(id);
+      }
+      g.saveGame?.();
+      this.openLoadout();
+    }
+    else if (a === 'unequipSlot') {
+      g.spells.unequip(+el.dataset.i);
+      g.saveGame?.();
+      this.openLoadout();
+    }
     else if (a === 'timetable') this.openTimetable();
     else if (a === 'travel') { this.close(); g.benches._openMap(); g.player.frozen = true; }
     else if (a === 'yearup') { this.close(); g.advanceYear(); }

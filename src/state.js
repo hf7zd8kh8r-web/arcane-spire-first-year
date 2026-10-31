@@ -11,6 +11,7 @@ export function newSave(name, house) {
     hp: MAX_HP, maxHp: MAX_HP,
     stamina: MAX_STAMINA,
     spells: ['sparkbolt'],
+    loadout: ['sparkbolt', null, null, null, null, null, null, null, null, null],
     quests: null,
     secrets: [],
     relics: 0,

@@ -1,31 +1,98 @@
 import { THREE } from './engine.js';
 import { SPELLS, SPELL_ORDER, HIT_CAP } from './data.js';
 
+/** Offensive / control kinds — only castable during a live duel/battle. */
+export const COMBAT_KINDS = new Set([
+  'attack', 'fire', 'ice', 'lightning', 'stun', 'disarm', 'control',
+  'earth', 'water', 'air', 'light', 'dark',
+]);
+export const UTILITY_KINDS = new Set(['shield', 'mobility', 'levitate']);
+export const LOADOUT_SIZE = 10;
+
+export function isCombatSpell(id) {
+  const sp = SPELLS[id];
+  return !!(sp && COMBAT_KINDS.has(sp.kind));
+}
+
 export class Spellbook {
   constructor(game) {
     this.g = game;
     this.cds = {};
     this.active = 'sparkbolt';
     this.unlocked = new Set(['sparkbolt']);
+    /** Exactly LOADOUT_SIZE equipped ids (null = empty slot). Hotbar uses these. */
+    this.loadout = ['sparkbolt', null, null, null, null, null, null, null, null, null];
     this.shieldT = 0;
     this.parryWindow = 0;
     this.floatT = 0;
     this.castLock = 0;
   }
 
+  syncFromSave(save) {
+    this.unlocked = new Set(save.spells || ['sparkbolt']);
+    let lo = Array.isArray(save.loadout) ? save.loadout.slice(0, LOADOUT_SIZE) : null;
+    if (!lo || !lo.some(Boolean)) {
+      // Auto-fill first N known (prefer utility + sparkbolt)
+      const known = SPELL_ORDER.filter(id => this.unlocked.has(id));
+      lo = [];
+      for (const id of known) {
+        if (lo.length >= LOADOUT_SIZE) break;
+        lo.push(id);
+      }
+      while (lo.length < LOADOUT_SIZE) lo.push(null);
+    } else {
+      while (lo.length < LOADOUT_SIZE) lo.push(null);
+      lo = lo.map(id => (id && this.unlocked.has(id) ? id : null));
+    }
+    if (!lo[0]) lo[0] = this.unlocked.has('sparkbolt') ? 'sparkbolt' : (SPELL_ORDER.find(id => this.unlocked.has(id)) || null);
+    this.loadout = lo;
+    this.active = lo.find(Boolean) || 'sparkbolt';
+    save.loadout = [...this.loadout];
+  }
+
+  persistLoadout() {
+    if (this.g.save) this.g.save.loadout = [...this.loadout];
+  }
+
+  equip(id, slot) {
+    if (!SPELLS[id] || !this.unlocked.has(id)) return false;
+    // Remove duplicate
+    this.loadout = this.loadout.map(x => x === id ? null : x);
+    if (slot == null || slot < 0 || slot >= LOADOUT_SIZE) {
+      slot = this.loadout.findIndex(x => !x);
+      if (slot < 0) slot = 0;
+    }
+    this.loadout[slot] = id;
+    this.active = id;
+    this.persistLoadout();
+    return true;
+  }
+
+  unequip(slot) {
+    if (slot < 0 || slot >= LOADOUT_SIZE) return;
+    const was = this.loadout[slot];
+    this.loadout[slot] = null;
+    if (this.active === was) this.active = this.loadout.find(Boolean) || 'sparkbolt';
+    this.persistLoadout();
+  }
+
+  inBattle() {
+    return !!(this.g.duel?.on && this.g.duel.phase !== 'end');
+  }
+
+
   unlock(id) {
     if (SPELLS[id]) this.unlocked.add(id);
   }
 
+  /** Hotbar = equipped loadout (up to 10). */
   known() {
-    const all = SPELL_ORDER.filter(id => this.unlocked.has(id));
-    // Hotbar shows up to 8; full book in menu
-    return all.slice(0, 8);
+    return this.loadout.filter(Boolean);
   }
   allKnown() { return SPELL_ORDER.filter(id => this.unlocked.has(id)); }
 
   select(i) {
-    const k = this.known();
+    const k = this.loadout;
     if (k[i]) this.active = k[i];
   }
 
@@ -33,10 +100,17 @@ export class Spellbook {
     const S = this.g.save;
     const sp = SPELLS[id];
     if (!sp || !this.unlocked.has(id)) return false;
+    // Must be on the 10-spell loadout (or shield via raiseShield)
+    if (!this.loadout.includes(id) && id !== 'aegis') return false;
     if ((this.cds[id] || 0) > 0) return false;
     if (this.castLock > 0) return false;
     if (S.stamina < sp.stamina) return false;
     if (this.g.duel?.phase === 'countdown') return false;
+    // Combat spells only in battle
+    if (COMBAT_KINDS.has(sp.kind) && !this.inBattle()) {
+      this.g.toast?.('Combat workings only in a duel — open Duel Club or accept a challenge');
+      return false;
+    }
     return true;
   }
 

@@ -37,9 +37,9 @@ export function qTick(dt) {
   else if (QA.hi >= 12 && i < 2 && QA.ups < 1) { Q.level = L[i + 1]; QA.hi = 0; QA.ups++; QA.cool = 5; localStorage.setItem(QKEY + '_a', Q.level); applyQuality(); }
 }
 export const qv = () => ({
-  low:  { pr: 0.7,  far: 110, parts: 0.35, shadows: false, bloom: false, aa: false, tex: 64 },
-  med:  { pr: 1.1,  far: 170, parts: 0.7,  shadows: true,  bloom: true,  aa: true,  tex: 128 },
-  high: { pr: 1.6,  far: 260, parts: 1,    shadows: true,  bloom: true,  aa: true,  tex: 256 },
+  low:  { pr: 0.7,  far: 220, parts: 0.35, shadows: false, bloom: false, aa: false, tex: 64 },
+  med:  { pr: 1.1,  far: 380, parts: 0.7,  shadows: true,  bloom: true,  aa: true,  tex: 128 },
+  high: { pr: 1.6,  far: 520, parts: 1,    shadows: true,  bloom: true,  aa: true,  tex: 256 },
 }[Q.level]);
 
 /** Procedural canvas textures for PBR. */
@@ -250,7 +250,7 @@ export class Builder {
 export function makeScene() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x87a8c8);
-  scene.fog = new THREE.FogExp2(0x9ab4c8, 0.0065);
+  scene.fog = new THREE.FogExp2(0x9ab4c8, 0.0032);
   const hemi = new THREE.HemisphereLight(0xd0e4ff, 0x3a2a18, 0.45);
   scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xfff2d8, 1.35);
