@@ -66,10 +66,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c1020;color:#f0e8d
 #menuBtn{right:12px}#bookBtn{right:90px}
 #toast{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);background:#1a1840ee;border:1px solid #c8a050;padding:12px 18px;border-radius:12px;font-weight:800;text-align:center;max-width:80vw;opacity:0;transition:opacity .3s;pointer-events:none;z-index:30}
 #hurt{position:absolute;inset:0;background:radial-gradient(transparent 40%,#8004);opacity:0;transition:opacity .15s;pointer-events:none}
-#rotHint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0c1020ee;color:#e8d8a0;text-align:center;padding:24px;font-size:1.1rem;z-index:40;pointer-events:auto;transition:opacity .5s}
-#rotHint.bye{opacity:0;pointer-events:none}
-#rotHint small{display:block;margin-top:8px;opacity:.6;font-size:.8rem}
-#rotHint b{position:absolute;top:16px;right:20px;cursor:pointer}
+#rotHint{position:absolute;left:50%;top:calc(12px + env(safe-area-inset-top));transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0c1020cc;color:#e8d8a0;text-align:center;padding:10px 16px;border-radius:12px;border:1px solid #c8a05066;font-size:.85rem;z-index:11;pointer-events:none;transition:opacity .4s;max-width:80vw}
+#rotHint.bye{opacity:0}
+#rotHint small{display:block;margin-top:4px;opacity:.65;font-size:.7rem}
+#rotHint b{pointer-events:auto;position:absolute;top:4px;right:8px;cursor:pointer;padding:4px 8px}
 
 #panel{display:none;position:fixed;inset:0;z-index:50;background:#000a;align-items:center;justify-content:center;padding:16px;overflow:auto}
 #panel .card{background:linear-gradient(160deg,#1a1840,#121028);border:1px solid #6a5080;border-radius:16px;padding:18px;width:min(360px,94vw);max-height:85vh;overflow:auto;display:flex;flex-direction:column;gap:8px}
@@ -100,10 +100,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c1020;color:#f0e8d
 
 /* Touch controls */
 #touch{position:absolute;inset:0;pointer-events:none;z-index:12}
-#touch .stick{pointer-events:auto;position:absolute;bottom:calc(30px + env(safe-area-inset-bottom));left:20px;width:110px;height:110px;border-radius:50%;background:#fff1;border:2px solid #fff3}
-#touch .stick.look{left:auto;right:20px}
-#touch .stick i{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px;border-radius:50%;background:#fffa;border:2px solid #fff}
-#touch .tb{pointer-events:auto;position:absolute;width:64px;height:64px;border-radius:50%;border:2px solid #c8a05088;background:#1a1840cc;color:#e8d8a0;font:inherit;font-weight:900;font-size:.7rem}
+#touch .zone{pointer-events:auto;position:absolute;top:0;bottom:0;width:50%}
+#touch #zoneL{left:0}
+#touch #zoneR{right:0}
+#touch .stick{pointer-events:none;position:absolute;bottom:calc(30px + env(safe-area-inset-bottom));left:24px;width:120px;height:120px;border-radius:50%;background:#fff2;border:2px solid #fff5}
+#touch .stick.look{left:auto;right:24px}
+#touch .stick i{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px;border-radius:50%;background:#fffc;border:2px solid #fff;pointer-events:none}
+#touch .tb{pointer-events:auto;position:absolute;width:64px;height:64px;border-radius:50%;border:2px solid #c8a05088;background:#1a1840cc;color:#e8d8a0;font:inherit;font-weight:900;font-size:.7rem;z-index:13}
 #tCast{right:140px;bottom:calc(140px + env(safe-area-inset-bottom))}
 #tShield{right:70px;bottom:calc(200px + env(safe-area-inset-bottom))}
 #tDodge{right:210px;bottom:calc(100px + env(safe-area-inset-bottom))}

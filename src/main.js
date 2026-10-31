@@ -109,9 +109,9 @@ function begin(save) {
   if (room) setTimeout(() => game.net.connect(room), 500);
   setTimeout(() => {
     const r = document.getElementById('rotHint');
-    if (r) { r.classList.add('bye'); setTimeout(() => r.remove(), 700); }
-  }, 6000);
-  setTimeout(() => ui.toast(isTouch ? 'Left stick move · right stick look · CAST / WARD / DODGE' : 'Click to lock mouse · WASD move · LMB cast · RMB ward · Shift dodge · E use · B broom', 'blk'), 1400);
+    if (r) { r.classList.add('bye'); setTimeout(() => r.remove(), 400); }
+  }, 3500);
+  setTimeout(() => ui.toast(isTouch ? 'Drag LEFT half to move · RIGHT half to look' : 'Click to lock mouse · WASD move · LMB cast · RMB ward · Shift dodge · E use · B broom', 'blk'), 800);
 }
 
 // Expose helpers for headless tests

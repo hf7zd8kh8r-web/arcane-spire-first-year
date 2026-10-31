@@ -6,7 +6,7 @@ import { MAX_HP, MAX_STAMINA } from './data.js';
 export class Player {
   constructor(game) {
     this.g = game;
-    this.pos = new THREE.Vector3(0, 0, 20);
+    this.pos = new THREE.Vector3(0, 0, 18);
     this.yaw = Math.PI; // facing north (great hall)
     this.pitch = 0.15;
     this.vy = 0;

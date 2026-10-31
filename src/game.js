@@ -55,11 +55,12 @@ export class Game {
     this.spells.unlocked = new Set(save.spells || ['sparkbolt']);
     if (save.house) this.player.rebuild(save.house);
     else this.player.rebuild('emberforge');
-    if (!save.sorted) this.player.pos.set(0, 0, -42);
+    // Spawn in open courtyard (never inside building colliders — that felt like "can't move")
+    if (!save.sorted) { this.player.pos.set(0, 0, 18); this.player.yaw = Math.PI; }
     else {
       const c = HOUSES[save.house]?.common;
-      if (c) this.player.pos.set(c.x, 0, c.z + 6);
-      else this.player.pos.set(0, 0, 15);
+      if (c) { this.player.pos.set(c.x * 0.35, 0, 18); this.player.yaw = Math.PI; }
+      else { this.player.pos.set(0, 0, 18); this.player.yaw = Math.PI; }
     }
     this._spawnNpcs();
     this._spawnWisps();
