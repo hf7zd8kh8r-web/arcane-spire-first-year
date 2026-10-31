@@ -1,5 +1,6 @@
-import { HOUSES, SPELLS, SCHOOL, DUELISTS, QUESTS } from './data.js';
+import { HOUSES, SPELLS, SCHOOL, DUELISTS, QUESTS, SPELL_COUNT } from './data.js';
 import { isTouch } from './engine.js';
+import { PERIODS } from './schedule.js';
 
 export class UI {
   constructor() {
@@ -73,14 +74,19 @@ export class UI {
     this.modal = 'menu';
     const panel = document.getElementById('panel');
     panel.style.display = 'flex';
+    const known = this.game?.spells?.allKnown?.()?.length || this.game?.spells?.unlocked?.size || 0;
     panel.innerHTML = `
       <div class="card">
         <h2>${SCHOOL.title}</h2>
-        <button data-act="spellbook">📖 Spellbook</button>
+        <button data-act="spellbook">📖 Spellbook (${known}/${SPELL_COUNT})</button>
         <button data-act="quests">📜 Quests</button>
         <button data-act="duelclub">⚔ Duel Club</button>
+        <button data-act="cards">🃏 Creature Cards</button>
+        <button data-act="timetable">🗓️ Timetable</button>
         <button data-act="aether">🧹 Aetherchase</button>
-        <button data-act="peers">👥 Chamber Peers</button>
+        <button data-act="travel">🪑 Bench Travel</button>
+        <button data-act="yearup">🌙 Advance Year</button>
+        <button data-act="peers">👥 Duo / Chamber</button>
         <button data-act="close">Close</button>
       </div>`;
   }
@@ -90,11 +96,15 @@ export class UI {
     const g = this.game;
     const panel = document.getElementById('panel');
     panel.style.display = 'flex';
-    const rows = Object.values(SPELLS).map(sp => {
-      const know = g.spells.unlocked.has(sp.id);
-      return `<div class="srow ${know ? '' : 'locked'}"><b>${sp.icon} ${sp.name}</b><span>${know ? sp.desc : 'Not yet learned'}</span></div>`;
+    const known = g.spells.allKnown ? g.spells.allKnown() : [...g.spells.unlocked];
+    const lockedN = SPELL_COUNT - known.length;
+    const rows = known.map(id => {
+      const sp = SPELLS[id];
+      return `<div class="srow"><b>${sp.icon} ${sp.name}</b><span>${sp.desc} · ${sp.kind}</span></div>`;
     }).join('');
-    panel.innerHTML = `<div class="card wide"><h2>Spellbook</h2>${rows}<button data-act="close">Close</button></div>`;
+    panel.innerHTML = `<div class="card wide"><h2>Spellbook · ${known.length}/${SPELL_COUNT}</h2>
+      ${rows}<p class="dim">${lockedN} workings still sealed — attend classes, duel, and explore.</p>
+      <button data-act="close">Close</button></div>`;
   }
 
   openQuests() {
@@ -141,6 +151,10 @@ export class UI {
     else if (a === 'spellbook') this.openSpellbook();
     else if (a === 'quests') this.openQuests();
     else if (a === 'duelclub') this.openDuelClub();
+    else if (a === 'cards') { this.close(); g.cards.open(); }
+    else if (a === 'timetable') this.openTimetable();
+    else if (a === 'travel') { this.close(); g.benches._openMap(); g.player.frozen = true; }
+    else if (a === 'yearup') { this.close(); g.advanceYear(); }
     else if (a === 'aether') { this.close(); g.broom.startSport(); }
     else if (a === 'duelnpc') { this.close(); g.duel.challengeNpc(el.dataset.id); }
     else if (a === 'duelok') {
@@ -162,6 +176,31 @@ export class UI {
       this.modal = 'peers';
     }
     else if (a === 'chal') { this.close(); g.net.challenge(+el.dataset.id); }
+    else if (a === 'skipclass') { g.schedule.skipCurrent(); this.openTimetable(); }
+  }
+
+  openTimetable() {
+    this.modal = 'timetable';
+    const g = this.game;
+    const panel = document.getElementById('panel');
+    panel.style.display = 'flex';
+    const cur = g.schedule.currentPeriod();
+    const rows = PERIODS.map(p => {
+      const on = cur && cur.id === p.id;
+      return `<div class="srow ${on ? 'done' : ''}"><b>${p.name}</b><span>${p.start}:00–${p.end}:00 · ${p.room} · ${p.teacher}${on ? ' · NOW' : ''}</span></div>`;
+    }).join('');
+    const det = g.save.school?.detentionTask;
+    panel.innerHTML = `<div class="card wide"><h2>Timetable · Y${g.save.year || 1}</h2>
+      <p class="dim">${g.schedule.clockText()} · Grade: ${g.save.school?.grade || 'New'} · Detentions: ${g.save.school?.detentions || 0}</p>
+      ${rows}
+      ${det ? `<p class="dim">Detention: ${det.desc} (${det.progress}/${det.need})</p>` : ''}
+      <button data-act="skipclass">Skip current class (detention)</button>
+      <button data-act="close">Close</button></div>`;
+  }
+
+  showFpCards(on) {
+    const row = document.getElementById('spells');
+    if (row) row.classList.toggle('fp', !!on);
   }
 
   bind() {

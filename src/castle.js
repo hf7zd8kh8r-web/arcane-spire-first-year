@@ -12,67 +12,60 @@ function battlement(B, x, y, z, len, alongX = true) {
   const n = Math.floor(len / 2.2);
   for (let i = 0; i < n; i++) {
     const o = -len / 2 + 1.1 + i * 2.2;
-    if (alongX) B.box(1.2, 1.4, 1.0, STONE2, mat(x + o, y + 0.7, z));
-    else B.box(1.0, 1.4, 1.2, STONE2, mat(x, y + 0.7, z + o));
+    if (alongX) B.box(1.2, 1.4, 1.0, STONE2, mat(x + o, y + 0.7, z), { mat: 'stoneDark' });
+    else B.box(1.0, 1.4, 1.2, STONE2, mat(x, y + 0.7, z + o), { mat: 'stoneDark' });
   }
 }
 
 function tower(B, x, z, h = 18, r = 3.2, roofH = 5, accent = ROOF) {
-  B.cyl(r, r * 1.08, h, STONE, mat(x, h / 2, z), { grad: 0.22, seg: 14 });
-  // bands
-  B.cyl(r * 1.12, r * 1.12, 0.45, STONE2, mat(x, h * 0.35, z), { seg: 14 });
-  B.cyl(r * 1.14, r * 1.14, 0.55, STONE2, mat(x, h, z), { seg: 14 });
-  // balcony ring
-  B.cyl(r * 1.35, r * 1.35, 0.35, STONE3, mat(x, h * 0.72, z), { seg: 14 });
+  B.cyl(r, r * 1.08, h, STONE, mat(x, h / 2, z), { mat: 'stone', seg: 14 });
+  B.cyl(r * 1.12, r * 1.12, 0.45, STONE2, mat(x, h * 0.35, z), { mat: 'stoneDark', seg: 14 });
+  B.cyl(r * 1.14, r * 1.14, 0.55, STONE2, mat(x, h, z), { mat: 'stoneDark', seg: 14 });
+  B.cyl(r * 1.35, r * 1.35, 0.35, STONE3, mat(x, h * 0.72, z), { mat: 'stone', seg: 14 });
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2;
-    B.box(0.35, 0.9, 0.35, STONE2, mat(x + Math.cos(a) * r * 1.25, h * 0.72 + 0.6, z + Math.sin(a) * r * 1.25));
+    B.box(0.35, 0.9, 0.35, STONE2, mat(x + Math.cos(a) * r * 1.25, h * 0.72 + 0.6, z + Math.sin(a) * r * 1.25), { mat: 'stoneDark' });
   }
-  B.cone(r * 1.45, roofH, accent, mat(x, h + roofH / 2, z), { seg: 14, grad: 0.18 });
-  B.sphere(0.28, GOLD, mat(x, h + roofH + 0.25, z), { outline: false });
-  // windows with frames
+  B.cone(r * 1.45, roofH, accent, mat(x, h + roofH / 2, z), { mat: 'roof', seg: 14 });
+  B.sphere(0.28, GOLD, mat(x, h + roofH + 0.25, z), { mat: 'gold' });
   for (let tier = 0; tier < 3; tier++) {
     for (let i = 0; i < 4; i++) {
       const a = (i / 4) * Math.PI * 2 + 0.4;
       const wy = h * (0.25 + tier * 0.22);
-      B.box(0.85, 1.4, 0.25, 0x2a2430, mat(x + Math.cos(a) * (r - 0.1), wy, z + Math.sin(a) * (r - 0.1), 0, -a, 0));
-      B.box(0.65, 1.1, 0.12, GLASS, mat(x + Math.cos(a) * (r + 0.05), wy, z + Math.sin(a) * (r + 0.05), 0, -a, 0), { outline: false });
+      B.box(0.85, 1.4, 0.25, 0x2a2430, mat(x + Math.cos(a) * (r - 0.1), wy, z + Math.sin(a) * (r - 0.1), 0, -a, 0), { mat: 'stoneDark' });
+      B.box(0.65, 1.1, 0.12, GLASS, mat(x + Math.cos(a) * (r + 0.05), wy, z + Math.sin(a) * (r + 0.05), 0, -a, 0), { mat: 'glass' });
     }
   }
-  // door
-  B.box(1.4, 2.4, 0.3, WOOD, mat(x, 1.2, z + r * 0.95));
-  B.sphere(0.08, GOLD, mat(x + 0.4, 1.2, z + r * 0.95 + 0.2), { outline: false });
+  B.box(1.4, 2.4, 0.3, WOOD, mat(x, 1.2, z + r * 0.95), { mat: 'wood' });
+  B.sphere(0.08, GOLD, mat(x + 0.4, 1.2, z + r * 0.95 + 0.2), { mat: 'gold' });
 }
 
 function hallWing(B, x, z, w, d, h, ry = 0) {
-  B.box(w, h, d, STONE, mat(x, h / 2, z, 0, ry, 0), { grad: 0.2 });
-  B.box(w + 0.6, 0.5, d + 0.6, STONE2, mat(x, h, z, 0, ry, 0));
-  // buttresses
+  B.box(w, h, d, STONE, mat(x, h / 2, z, 0, ry, 0), { mat: 'stone' });
+  B.box(w + 0.6, 0.5, d + 0.6, STONE2, mat(x, h, z, 0, ry, 0), { mat: 'stoneDark' });
   const sides = [-1, 1];
   for (const s of sides) {
     for (let i = 0; i < 4; i++) {
       const oz = -d / 2 + 2 + i * (d / 4);
-      B.box(1.2, h * 0.85, 1.4, STONE4, mat(x + s * (w / 2 + 0.4), h * 0.4, z + oz, 0, ry, 0), { grad: 0.15 });
+      B.box(1.2, h * 0.85, 1.4, STONE4, mat(x + s * (w / 2 + 0.4), h * 0.4, z + oz, 0, ry, 0), { mat: 'stoneDark' });
     }
   }
-  // pitched roofs
-  B.box(w * 0.98, 0.35, d * 0.58, ROOF, mat(x, h + 2.0, z - d * 0.2, 0.5, ry, 0), { grad: 0.12 });
-  B.box(w * 0.98, 0.35, d * 0.58, ROOF2, mat(x, h + 2.0, z + d * 0.2, -0.5, ry, 0), { grad: 0.12 });
-  B.box(w * 0.2, 0.5, d * 0.15, ROOF3, mat(x, h + 3.2, z, 0, ry, 0)); // ridge ornaments
-  // arched windows along front
+  B.box(w * 0.98, 0.35, d * 0.58, ROOF, mat(x, h + 2.0, z - d * 0.2, 0.5, ry, 0), { mat: 'roof' });
+  B.box(w * 0.98, 0.35, d * 0.58, ROOF2, mat(x, h + 2.0, z + d * 0.2, -0.5, ry, 0), { mat: 'roof' });
+  B.box(w * 0.2, 0.5, d * 0.15, ROOF3, mat(x, h + 3.2, z, 0, ry, 0), { mat: 'roof' });
   for (let i = -2; i <= 2; i++) {
     if (i === 0) continue;
-    B.box(1.6, 2.8, 0.2, 0x2a2438, mat(x + i * 4.5, h * 0.45, z + d / 2 + 0.05));
-    B.box(1.3, 2.3, 0.12, GLASS2, mat(x + i * 4.5, h * 0.45, z + d / 2 + 0.15), { outline: false });
+    B.box(1.6, 2.8, 0.2, 0x2a2438, mat(x + i * 4.5, h * 0.45, z + d / 2 + 0.05), { mat: 'stoneDark' });
+    B.box(1.3, 2.3, 0.12, GLASS2, mat(x + i * 4.5, h * 0.45, z + d / 2 + 0.15), { mat: 'glass' });
   }
 }
 
 function tree(B, x, z, scale = 1) {
   const th = (4 + Math.random() * 2) * scale;
-  B.cyl(0.45 * scale, 0.65 * scale, th, 0x4a3020, mat(x, th / 2, z), { seg: 7, outline: false });
-  B.sphere(2.0 * scale, GRASS2, mat(x, th + 0.8 * scale, z), { seg: 9, outline: false });
-  B.sphere(1.5 * scale, GRASS3, mat(x + 0.8 * scale, th + 1.4 * scale, z + 0.3), { seg: 8, outline: false });
-  B.sphere(1.3 * scale, GRASS2, mat(x - 0.6 * scale, th + 1.2 * scale, z - 0.5), { seg: 8, outline: false });
+  B.cyl(0.45 * scale, 0.65 * scale, th, 0x4a3020, mat(x, th / 2, z), { mat: 'wood', seg: 7 });
+  B.sphere(2.0 * scale, GRASS2, mat(x, th + 0.8 * scale, z), { mat: 'grass', seg: 9 });
+  B.sphere(1.5 * scale, GRASS3, mat(x + 0.8 * scale, th + 1.4 * scale, z + 0.3), { mat: 'grass', seg: 8 });
+  B.sphere(1.3 * scale, GRASS2, mat(x - 0.6 * scale, th + 1.2 * scale, z - 0.5), { mat: 'grass', seg: 8 });
 }
 
 /** Build Crescentwick grounds + castle. */
@@ -82,11 +75,11 @@ export function buildCastle() {
   const colliders = [];
 
   // Ground layers
-  B.box(240, 0.5, 240, GRASS, mat(0, -0.25, 0), { outline: false, grad: 0.04 });
+  B.box(240, 0.5, 240, GRASS, mat(0, -0.25, 0), { mat: 'grass' });
   // darker grass patches
   for (let i = 0; i < 12; i++) {
     const gx = (i % 4) * 40 - 60, gz = Math.floor(i / 4) * 50 - 40;
-    B.cyl(12 + (i % 3) * 4, 12, 0.2, i % 2 ? GRASS2 : GRASS3, mat(gx, 0.02, gz), { seg: 10, outline: false });
+    B.cyl(12 + (i % 3) * 4, 12, 0.2, i % 2 ? GRASS2 : GRASS3, mat(gx, 0.02, gz), { mat: 'grass', seg: 10 });
   }
   // Courtyard
   B.box(40, 0.4, 40, PATH, mat(0, 0.08, 0), { outline: false });
@@ -104,7 +97,7 @@ export function buildCastle() {
   // Fountain plaza
   B.cyl(6, 6, 0.55, STONE3, mat(0, 0.35, 0), { seg: 20 });
   B.cyl(5, 5, 0.4, STONE2, mat(0, 0.55, 0), { seg: 18 });
-  B.cyl(3.6, 3.6, 0.7, WATER, mat(0, 0.6, 0), { seg: 18, outline: false });
+  B.cyl(3.6, 3.6, 0.7, WATER, mat(0, 0.6, 0), { mat: 'water', seg: 18 });
   B.cyl(0.5, 0.65, 2.8, STONE, mat(0, 1.7, 0), { seg: 10 });
   B.cyl(1.2, 0.4, 0.5, STONE3, mat(0, 3.0, 0), { seg: 10 });
   B.sphere(0.7, 0xb0d0f0, mat(0, 3.5, 0), { outline: false });
@@ -287,7 +280,7 @@ export function buildCastle() {
     [[-5, z], [5, z]].forEach(([x, zz]) => {
       B.cyl(0.14, 0.18, 2.8, WOOD2, mat(x, 1.4, zz), { seg: 6, outline: false });
       B.box(0.5, 0.15, 0.5, WOOD, mat(x, 2.85, zz), { outline: false });
-      B.sphere(0.28, 0xffe8a0, mat(x, 3.15, zz), { seg: 6, outline: false });
+      B.sphere(0.28, 0xffe8a0, mat(x, 3.15, zz), { mat: 'emissive', seg: 6 });
     });
   }
   // more lanterns toward hall
@@ -295,7 +288,7 @@ export function buildCastle() {
     const z = -8 - i * 6;
     [[-5, z], [5, z]].forEach(([x, zz]) => {
       B.cyl(0.14, 0.18, 2.8, WOOD2, mat(x, 1.4, zz), { seg: 6, outline: false });
-      B.sphere(0.28, 0xffe8a0, mat(x, 3.15, zz), { seg: 6, outline: false });
+      B.sphere(0.28, 0xffe8a0, mat(x, 3.15, zz), { mat: 'emissive', seg: 6 });
     });
   }
 
@@ -305,6 +298,21 @@ export function buildCastle() {
     B.sphere(1.1, GRASS3, mat(x, 1.3, z), { seg: 8, outline: false });
     B.sphere(0.35, [0xc04060, 0xe8c040, 0x8060c0, 0x40a0c0][i], mat(x, 1.8, z), { outline: false });
   });
+
+
+  // Moonrail platform (train arrival — original)
+  B.box(18, 0.6, 6, STONE3, mat(0, 0.35, 72), { mat: 'stone' });
+  B.box(16, 0.15, 4.5, WOOD, mat(0, 0.7, 72), { mat: 'wood' });
+  B.box(14, 2.2, 3.2, 0xc8d0d8, mat(0, 1.8, 78), { mat: 'stone' }); // carriage body
+  B.box(14.4, 0.3, 3.4, 0x4a3048, mat(0, 3.0, 78), { mat: 'roof' });
+  B.cyl(0.55, 0.55, 0.3, 0x2a2430, mat(-5, 0.55, 76), { mat: 'stoneDark', seg: 10 });
+  B.cyl(0.55, 0.55, 0.3, 0x2a2430, mat(5, 0.55, 76), { mat: 'stoneDark', seg: 10 });
+  B.cyl(0.55, 0.55, 0.3, 0x2a2430, mat(-5, 0.55, 80), { mat: 'stoneDark', seg: 10 });
+  B.cyl(0.55, 0.55, 0.3, 0x2a2430, mat(5, 0.55, 80), { mat: 'stoneDark', seg: 10 });
+  B.box(0.2, 1.4, 2.4, GLASS2, mat(-4, 1.9, 78.1), { mat: 'glass' });
+  B.box(0.2, 1.4, 2.4, GLASS2, mat(4, 1.9, 78.1), { mat: 'glass' });
+  B.sphere(0.2, GOLD, mat(0, 3.3, 78), { mat: 'emissive' });
+  spots.moonrail = { x: 0, y: 0, z: 72 };
 
   const mesh = B.build(true);
   const group = new THREE.Group();
@@ -317,10 +325,21 @@ export function buildCastle() {
 
   // Warm lantern point lights (a few)
   [[-5, 3.2, 10], [5, 3.2, 10], [0, 3.5, 0], [-5, 3.2, -20], [5, 3.2, -20]].forEach(([x, y, z]) => {
-    const pl = new THREE.PointLight(0xffcc88, 0.55, 14);
+    const pl = new THREE.PointLight(0xffcc88, 0.7, 16);
     pl.position.set(x, y, z);
     group.add(pl);
   });
+
+  // Soft light shafts (godrays) over courtyard
+  for (const [sx, sz] of [[-8, 4], [8, -6], [0, 16]]) {
+    const shaft = new THREE.Mesh(
+      new THREE.ConeGeometry(3.5, 14, 8, 1, true),
+      new THREE.MeshBasicMaterial({ color: 0xffe8c0, transparent: true, opacity: 0.06, side: THREE.DoubleSide, depthWrite: false })
+    );
+    shaft.position.set(sx, 10, sz); shaft.rotation.x = Math.PI;
+    group.add(shaft);
+  }
+
 
   return { group, colliders, spots };
 }

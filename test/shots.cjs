@@ -50,6 +50,11 @@ const clearUI = async (p) => p.evaluate(() => {
   }
   await p.waitForFunction(() => __g.mode === 'game' && __g.game, null, { timeout: 20000 });
   await p.waitForTimeout(1200);
+  await p.evaluate(() => {
+    const g = __g.game;
+    if (g.cutscenes?.on) { g.cutscenes.on = false; g.player.frozen = false; const el = document.getElementById('cutscene'); if (el) el.style.display = 'none'; }
+    g.save.seenTrain = true;
+  });
   await clearUI(p);
 
   // Approach Great Hall looking at facade
@@ -166,6 +171,60 @@ const clearUI = async (p) => p.evaluate(() => {
   await p.waitForTimeout(300);
   await shot(p, '10_spellbook.png');
   await p.evaluate(() => __g.ui.close());
+
+
+  // Moonrail / train platform
+  await p.evaluate(() => {
+    const g = __g.game;
+    g.broom?.endSport?.(); g.broom?.dismount?.();
+    g.player.fpMode = false; if (g.player.mesh) g.player.mesh.visible = true;
+    const m = g.castle.spots.moonrail || { x: 0, z: 72 };
+    g.player.pos.set(m.x, 0, m.z - 8);
+    g.player.yaw = 0; g.player.pitch = 0.1; g.player.camDist = 7;
+  });
+  await p.waitForTimeout(500);
+  await clearUI(p);
+  await shot(p, '13_moonrail.png');
+
+  // Creature tame spot
+  await p.evaluate(() => {
+    const g = __g.game;
+    g.player.pos.set(8, 0, 8);
+    g.player.yaw = 0.5; g.player.pitch = 0.15; g.player.camDist = 5;
+  });
+  await p.waitForTimeout(400);
+  await clearUI(p);
+  await shot(p, '14_creatures.png');
+
+  // Card battle UI
+  await p.evaluate(() => {
+    const g = __g.game;
+    g.save.creatures = g.save.creatures || { owned: [], plants: [], cards: {}, points: 3, items: 2 };
+    if (!g.save.creatures.owned.length) {
+      g.save.creatures.owned = ['glimmerfox', 'emberfinch', 'mossback'];
+      g.save.creatures.cards = { glimmerfox: { lvl: 1 }, emberfinch: { lvl: 2 }, mossback: { lvl: 1 } };
+    }
+    g.cards.open();
+  });
+  await p.waitForTimeout(400);
+  await shot(p, '15_cardbattle.png');
+  await p.evaluate(() => __g.game.cards.close());
+
+  // Cutscene sample
+  await p.evaluate(() => __g.game.cutscenes.playYear(1));
+  await p.waitForTimeout(400);
+  await shot(p, '16_cutscene.png');
+  await p.evaluate(() => {
+    const g = __g.game;
+    g.cutscenes.on = false; g.player.frozen = false;
+    const el = document.getElementById('cutscene'); if (el) el.style.display = 'none';
+  });
+
+  const unlockedProbe = await p.evaluate(() => {
+    __g.game.spells.unlock('moonbolt');
+    return __g.game.spells.unlocked.has('moonbolt');
+  });
+  ok('200spell_catalog', unlockedProbe);
 
   // Dramatic castle vista from south gate looking north
   await p.evaluate(() => {

@@ -16,6 +16,11 @@ export function newSave(name, house) {
     relics: 0,
     stats: { duels: 0, time: 0, wisps: 0 },
     sorted: false,
+    year: 1,
+    seenTrain: false,
+    seenYear: {},
+    school: null,
+    creatures: null,
     savedAt: Date.now(),
   };
 }

@@ -7,9 +7,9 @@ export class Quests {
 
   ensure() {
     const S = this.g.save;
-    if (!S.quests) {
-      S.quests = {};
-      for (const q of QUESTS) S.quests[q.id] = { step: 0, done: false };
+    if (!S.quests) S.quests = {};
+    for (const q of QUESTS) {
+      if (!S.quests[q.id]) S.quests[q.id] = { step: 0, done: false };
     }
   }
 

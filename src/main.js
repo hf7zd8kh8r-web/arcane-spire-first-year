@@ -120,6 +120,8 @@ window.__startQuick = (opts = {}) => {
   sv.sorted = !!opts.sorted || !!opts.house;
   if (opts.house) sv.house = opts.house;
   sv.look = { skin: 1, hair: 2 };
+  sv.seenTrain = true;
+  sv.skipCutscene = true;
   if (mode === 'logo' || mode === 'cover') { mode = 'loading'; hide('#logo'); hide('#cover'); }
   if (!game) { game = new Game(ui); ui.attach(game); }
   begin(sv);

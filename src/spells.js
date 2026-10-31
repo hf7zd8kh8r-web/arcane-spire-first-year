@@ -17,7 +17,12 @@ export class Spellbook {
     if (SPELLS[id]) this.unlocked.add(id);
   }
 
-  known() { return SPELL_ORDER.filter(id => this.unlocked.has(id)); }
+  known() {
+    const all = SPELL_ORDER.filter(id => this.unlocked.has(id));
+    // Hotbar shows up to 8; full book in menu
+    return all.slice(0, 8);
+  }
+  allKnown() { return SPELL_ORDER.filter(id => this.unlocked.has(id)); }
 
   select(i) {
     const k = this.known();
@@ -62,9 +67,14 @@ export class Spellbook {
     switch (sp.kind) {
       case 'attack':
       case 'ice':
+      case 'water':
+      case 'air':
+      case 'earth':
+      case 'light':
+      case 'dark':
         this._proj(sp, origin, dir); break;
       case 'shield':
-        this.shieldT = sp.duration;
+        this.shieldT = sp.duration || 1.4;
         this.parryWindow = 0.28;
         this.g.fx.shield(this.g.player.pos, sp.color);
         break;
@@ -75,7 +85,7 @@ export class Spellbook {
       case 'lightning':
         this._aimed(sp, origin, dir); break;
       case 'levitate':
-        this.floatT = sp.duration;
+        this.floatT = sp.duration || 2;
         this.g.fx.burst(this.g.player.pos.clone().add(new THREE.Vector3(0, 1, 0)), sp.color, 10);
         break;
       case 'mobility':
@@ -172,7 +182,7 @@ export function enemyCast(game, foe, spellId) {
     game.fx.burst(foe.pos, sp.color, 10);
     return;
   }
-  if (sp.kind === 'attack' || sp.kind === 'ice') {
+  if (['attack','ice','water','air','earth','light','dark'].includes(sp.kind)) {
     const vel = dir.multiplyScalar(sp.speed || 36);
     const p = game.fx.projectile(origin, vel, sp.color, 1.3);
     p.spell = sp.id; p.dmg = sp.dmg; p.owner = 'enemy'; p.targetPlayer = true;

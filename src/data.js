@@ -1,4 +1,6 @@
 /** Crescentwick Academy — original lore & game data (no franchise IP). */
+export { SPELLS, SPELL_ORDER, SPELL_COUNT } from './spells200.js';
+import { SPELLS as _SPELLS } from './spells200.js';
 
 export const SCHOOL = {
   name: 'Crescentwick Academy',
@@ -38,71 +40,6 @@ export const HOUSES = {
   },
 };
 
-export const SPELLS = {
-  sparkbolt: {
-    id: 'sparkbolt', name: 'Sparkbolt', kind: 'attack',
-    desc: 'A swift arc of golden energy. Your first taught charm.',
-    dmg: 14, stamina: 8, cd: 0.35, range: 28, speed: 42,
-    color: 0xffe08a, icon: '✦', unlock: 0,
-  },
-  aegis: {
-    id: 'aegis', name: 'Aegis Veil', kind: 'shield',
-    desc: 'Raise a shimmering ward. Perfect parry timing reflects bolts.',
-    dmg: 0, stamina: 12, cd: 0.8, duration: 1.6,
-    color: 0x88ccff, icon: '⛨', unlock: 1,
-  },
-  wandrift: {
-    id: 'wandrift', name: 'Wandrift', kind: 'disarm',
-    desc: 'Yank an opponent\'s wand aside and interrupt their cast.',
-    dmg: 6, stamina: 18, cd: 4.5, range: 18, interrupt: true,
-    color: 0xd0a0ff, icon: '↺', unlock: 2,
-  },
-  hovercharm: {
-    id: 'hovercharm', name: 'Hovercharm', kind: 'levitate',
-    desc: 'Lift yourself or a target briefly into the air.',
-    dmg: 0, stamina: 16, cd: 5, duration: 2.2,
-    color: 0xa0e8c0, icon: '⤒', unlock: 2,
-  },
-  stunflare: {
-    id: 'stunflare', name: 'Stunflare', kind: 'stun',
-    desc: 'A blinding flash that freezes foes mid-step.',
-    dmg: 8, stamina: 20, cd: 6, range: 14, stun: 1.4,
-    color: 0xffffff, icon: '✧', unlock: 3,
-  },
-  cinderlash: {
-    id: 'cinderlash', name: 'Cinderlash', kind: 'fire',
-    desc: 'A whipping arc of flame. Hits in a short cone.',
-    dmg: 22, stamina: 22, cd: 3.2, range: 12, cone: 50,
-    color: 0xff6622, icon: '🔥', unlock: 4,
-  },
-  frostneedle: {
-    id: 'frostneedle', name: 'Frostneedle', kind: 'ice',
-    desc: 'Icy shards that slow movement and cast speed.',
-    dmg: 12, stamina: 14, cd: 2.4, range: 26, speed: 38, slow: 0.45, slowDur: 2,
-    color: 0xaad8ff, icon: '❄', unlock: 5,
-  },
-  thundercoil: {
-    id: 'thundercoil', name: 'Thundercoil', kind: 'lightning',
-    desc: 'Chain lightning that leaps between nearby foes.',
-    dmg: 18, stamina: 28, cd: 7, range: 20, chains: 3,
-    color: 0xb8a0ff, icon: '⚡', unlock: 6,
-  },
-  blinkstep: {
-    id: 'blinkstep', name: 'Blinkstep', kind: 'mobility',
-    desc: 'Dash a short distance with a flicker of starlight. Brief i-frames.',
-    dmg: 0, stamina: 14, cd: 3.5, dist: 7,
-    color: 0xfff0c0, icon: '⇢', unlock: 3,
-  },
-  hexbind: {
-    id: 'hexbind', name: 'Hexbind', kind: 'control',
-    desc: 'Root a foe in glowing runes. Breaks on heavy hits.',
-    dmg: 4, stamina: 18, cd: 8, range: 16, root: 1.8,
-    color: 0x66ff99, icon: '◎', unlock: 7,
-  },
-};
-
-export const SPELL_ORDER = Object.keys(SPELLS);
-
 export const QUESTS = [
   { id: 'sort', name: 'The Sorting', type: 'main', desc: 'Stand before the Crescent Mirror and join a house.', steps: ['Visit the Great Hall', 'Complete Sorting'] },
   { id: 'first_lesson', name: 'First Charms', type: 'main', desc: 'Learn Sparkbolt from Tutor Brindle in the Charms wing.', steps: ['Find Tutor Brindle', 'Cast Sparkbolt 5 times', 'Return to Brindle'] },
@@ -114,6 +51,8 @@ export const QUESTS = [
   { id: 'bookshelf', name: 'Behind the Lexicon', type: 'secret', desc: 'Pull the right book in the Restricted Annex.', steps: ['Find the annex', 'Open the passage'] },
   { id: 'lake_ruin', name: 'Mirror Lake Ruin', type: 'secret', desc: 'Something glints under the lake\'s surface near the north shore.', steps: ['Reach the lake', 'Dive the ruin', 'Claim the relic'] },
   { id: 'forest_edge', name: 'Edgewood Watch', type: 'side', desc: 'Clear mist wisps from the forest edge for Keeper Rowan.', steps: ['Talk to Rowan', 'Clear 8 wisps', 'Report back'] },
+  { id: 'timetable', name: 'Know Your Hours', type: 'main', desc: 'Ask classmates for the timetable, then attend Charms.', steps: ['Talk to a classmate', 'Attend Morning Charms', 'Avoid skipping'] },
+  { id: 'beast_friend', name: 'First Companion', type: 'side', desc: 'Tame a wild creature and rescue a plant.', steps: ['Tame a creature', 'Rescue a plant'] },
 ];
 
 export const DUELISTS = [
@@ -125,4 +64,9 @@ export const DUELISTS = [
 
 export const MAX_HP = 100;
 export const MAX_STAMINA = 100;
-export const HIT_CAP = 0.35; // max fraction of max HP per hit outside duel climax
+export const HIT_CAP = 0.35;
+
+/** Hotbar: first 8 combat-ready originals always preferred when known. */
+export const HOTBAR_PREF = ['sparkbolt', 'aegis', 'wandrift', 'hovercharm', 'stunflare', 'cinderlash', 'frostneedle', 'blinkstep'];
+
+export function spellById(id) { return _SPELLS[id]; }

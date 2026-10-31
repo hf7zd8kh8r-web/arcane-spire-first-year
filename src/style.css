@@ -117,3 +117,23 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c1020;color:#f0e8d
 @media(min-width:900px){
   #touch{display:none}
 }
+
+#clock{position:absolute;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);font-size:.72rem;opacity:.75;background:#0006;padding:4px 10px;border-radius:8px;pointer-events:none;white-space:nowrap}
+#spells.fp .sp{width:56px;height:56px;border-color:#e8d8a0;box-shadow:0 0 16px #c8a05066}
+#cutscene,#cardbattle,#travelmap{display:none;position:fixed;inset:0;z-index:60;background:linear-gradient(180deg,#0a0c18f2,#1a1040ee);align-items:center;justify-content:center;padding:20px}
+#cutscene .cs-card,#cardbattle .cb-card,#travelmap .card{background:linear-gradient(160deg,#1a1840,#121028);border:1px solid #c8a05088;border-radius:16px;padding:22px;width:min(440px,94vw);max-height:85vh;overflow:auto;text-align:center}
+#cutscene h2{font-family:Cinzel,serif;color:#e8d8a0;margin-bottom:12px}
+#cutscene p{line-height:1.5;margin:12px 0 18px;min-height:3.2em}
+#cutscene button,#cardbattle button,#travelmap button{margin:4px;padding:12px 16px;border-radius:10px;border:1px solid #4a4070;background:#1a1840;color:#f0e8d8;font:inherit;font-weight:700;cursor:pointer}
+#csNext{background:linear-gradient(90deg,#6a4080,#c8a050)!important;border:0!important;width:100%}
+.cb-hand{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:10px 0}
+.cb-hand button{display:flex;flex-direction:column;align-items:center;min-width:90px}
+.cb-hand small{opacity:.65;font-size:.7rem}
+.cb-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0;justify-content:center}
+.cb-row span{opacity:.6;width:36px;font-size:.75rem}
+.cf{background:#14122a;border:1px solid #4a4070;border-radius:8px;padding:6px 8px;min-width:80px;position:relative;overflow:hidden}
+.cf b{font-size:.75rem;display:block}
+.cf i{display:block;height:4px;background:#e06070;margin-top:4px;border-radius:2px}
+.cf.down{opacity:.35}
+#travelmap .card{display:flex;flex-direction:column;gap:6px;text-align:left}
+#travelmap h2{text-align:center;font-family:Cinzel,serif;color:#e8d8a0}

@@ -67,9 +67,12 @@ export class Duel {
     this.phase = 'countdown';
     this.count = 3;
     this._t = 1;
+    this.g.player.fpMode = true;
+    if (this.g.player.mesh) this.g.player.mesh.visible = false;
     this.showCount(3);
     this.showHud(true);
-    this.g.toast?.('Duel — get ready!');
+    this.g.ui?.showFpCards?.(true);
+    this.g.toast?.('First-person duel — cards at the bottom!');
   }
 
   showCount(n) {
@@ -246,6 +249,9 @@ export class Duel {
       this.g.player.yaw = this.returnYaw || 0;
     }
     this.g.player.frozen = false;
+    this.g.player.fpMode = false;
+    if (this.g.player.mesh) this.g.player.mesh.visible = true;
+    this.g.ui?.showFpCards?.(false);
   }
 }
 
@@ -253,12 +259,12 @@ export function makeArenaMesh() {
   const g = new THREE.Group();
   const floor = new THREE.Mesh(
     new THREE.CylinderGeometry(16, 16, 1.2, 48),
-    new THREE.MeshToonMaterial({ color: 0x3a3550 })
+    new THREE.MeshStandardMaterial({ color: 0x3a3550, roughness: 0.85, metalness: 0.1 })
   );
   floor.position.y = -0.6; floor.receiveShadow = true; g.add(floor);
   const inner = new THREE.Mesh(
     new THREE.CylinderGeometry(12, 12, 0.15, 48),
-    new THREE.MeshToonMaterial({ color: 0x4a4068 })
+    new THREE.MeshStandardMaterial({ color: 0x4a4068, roughness: 0.7, metalness: 0.15 })
   );
   inner.position.y = 0.05; inner.receiveShadow = true; g.add(inner);
   const ring = new THREE.Mesh(
@@ -275,19 +281,19 @@ export function makeArenaMesh() {
     const a = (i / 8) * Math.PI * 2;
     const p = new THREE.Mesh(
       new THREE.CylinderGeometry(0.7, 0.85, 8, 10),
-      new THREE.MeshToonMaterial({ color: 0x5a5070 })
+      new THREE.MeshStandardMaterial({ color: 0x5a5070, roughness: 0.8, metalness: 0.08 })
     );
     p.position.set(Math.cos(a) * 14.5, 4, Math.sin(a) * 14.5);
     p.castShadow = true; g.add(p);
     const cap = new THREE.Mesh(
       new THREE.ConeGeometry(1.1, 2.2, 8),
-      new THREE.MeshToonMaterial({ color: 0x4a3048 })
+      new THREE.MeshStandardMaterial({ color: 0x4a3048, roughness: 0.65, metalness: 0.1 })
     );
     cap.position.set(Math.cos(a) * 14.5, 9.1, Math.sin(a) * 14.5);
     g.add(cap);
     const flame = new THREE.Mesh(
       new THREE.SphereGeometry(0.35, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0xffcc66 })
+      new THREE.MeshStandardMaterial({ color: 0xffcc66, emissive: 0xffaa44, emissiveIntensity: 1.5 })
     );
     flame.position.set(Math.cos(a) * 14.5, 8.2, Math.sin(a) * 14.5);
     g.add(flame);

@@ -18,6 +18,7 @@ export class Player {
     this.radius = 0.45;
     this.camDist = 5.5;
     this.camH = 2.2;
+    this.fpMode = false;
   }
 
   rebuild(house) {
@@ -123,16 +124,27 @@ export class Player {
   }
 
   updateCamera(cam) {
-    const dist = this.onBroom ? 8 : (this.g.duel?.on ? 7 : this.camDist);
+    if (this.fpMode || (this.g.duel?.on && this.g.duel.phase !== 'idle')) {
+      if (this.mesh) this.mesh.visible = false;
+      const eye = new THREE.Vector3(this.pos.x, this.pos.y + 1.55, this.pos.z);
+      cam.position.lerp(eye, 0.35);
+      const cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
+      const look = new THREE.Vector3(
+        this.pos.x + Math.sin(this.yaw) * cp * 12,
+        this.pos.y + 1.55 - sp * 12,
+        this.pos.z + Math.cos(this.yaw) * cp * 12
+      );
+      if (this.g.duel?.foe) look.lerp(this.g.duel.foe.pos.clone().setY(this.pos.y + 1.4), 0.15);
+      cam.lookAt(look);
+      return;
+    }
+    const dist = this.onBroom ? 8 : this.camDist;
     const h = this.onBroom ? 2.8 : this.camH;
     const cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
     const ox = -Math.sin(this.yaw) * cp * dist;
     const oy = h + sp * dist;
     const oz = -Math.cos(this.yaw) * cp * dist;
     const target = new THREE.Vector3(this.pos.x, this.pos.y + 1.4, this.pos.z);
-    if (this.g.duel?.on && this.g.duel.foe) {
-      target.lerp(this.g.duel.foe.pos.clone().setY(this.pos.y + 1.4), 0.25);
-    }
     const desired = new THREE.Vector3(this.pos.x + ox, this.pos.y + oy, this.pos.z + oz);
     cam.position.lerp(desired, 0.18);
     cam.lookAt(target);

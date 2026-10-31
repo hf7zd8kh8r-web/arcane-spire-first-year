@@ -1,4 +1,4 @@
-import { THREE, renderer, makeScene, makeCamera, qTick, applyQuality, qualityHooks } from './engine.js';
+import { THREE, renderer, makeScene, makeCamera, qTick, applyQuality, qualityHooks, setupComposer, renderFrame } from './engine.js';
 import { IN, pollKeys, consume } from './input.js';
 import { buildCastle, groundY } from './castle.js';
 import { Player } from './player.js';
@@ -9,8 +9,13 @@ import { BroomFlight } from './broom.js';
 import { Secrets } from './secrets.js';
 import { Quests } from './quests.js';
 import { Net } from './net.js';
-import { makeTutor, makeStudent } from './chars.js';
+import { makeTutor, makeStudent, makeClassmate } from './chars.js';
 import { HOUSES, SPELLS, HIT_CAP } from './data.js';
+import { CreatureSystem } from './creatures.js';
+import { Cutscenes } from './cutscenes.js';
+import { Schedule } from './schedule.js';
+import { CardBattle } from './cardbattle.js';
+import { Benches } from './benches.js';
 import * as ST from './state.js';
 
 export class Game {
@@ -19,6 +24,7 @@ export class Game {
     const { scene, sun } = makeScene();
     this.scene = scene; this.sun = sun;
     this.cam = makeCamera();
+    setupComposer(scene, this.cam);
     this.castle = buildCastle();
     this.scene.add(this.castle.group);
     this.fx = new FX(scene);
@@ -29,6 +35,11 @@ export class Game {
     this.secrets = new Secrets(this);
     this.quests = new Quests(this);
     this.net = new Net(this);
+    this.creatures = new CreatureSystem(this);
+    this.cutscenes = new Cutscenes(this);
+    this.schedule = new Schedule(this);
+    this.cards = new CardBattle(this);
+    this.benches = new Benches(this);
     this.arenaMesh = makeArenaMesh();
     this.scene.add(this.arenaMesh);
     this.npcs = [];
@@ -37,6 +48,7 @@ export class Game {
     this.running = false;
     this._clock = new THREE.Clock();
     this._netT = 0;
+    this._hudClock = 0;
     qualityHooks.push(() => {
       this.cam.aspect = window.innerWidth / Math.max(1, window.innerHeight);
       this.cam.updateProjectionMatrix();
@@ -45,17 +57,19 @@ export class Game {
   }
 
   toast(msg, k) { this.ui.toast(msg, k); }
-
   saveGame() { if (this.save) ST.save(this.save); }
 
   start(save) {
     this.save = save;
+    if (!save.year) save.year = 1;
+    if (!save.creatures) save.creatures = { owned: [], plants: [], cards: {}, points: 3, items: 0 };
+    if (!save.school) save.school = { year: save.year, grade: 'New', attended: {}, skipped: {}, detentions: 0, detentionTask: null, scheduleKnown: false };
     this.quests.ensure();
-    // restore unlocked spells
+    this.schedule.ensure();
+    this.creatures.ensureSave();
     this.spells.unlocked = new Set(save.spells || ['sparkbolt']);
     if (save.house) this.player.rebuild(save.house);
     else this.player.rebuild('emberforge');
-    // Spawn in open courtyard (never inside building colliders — that felt like "can't move")
     if (!save.sorted) { this.player.pos.set(0, 0, 18); this.player.yaw = Math.PI; }
     else {
       const c = HOUSES[save.house]?.common;
@@ -64,12 +78,29 @@ export class Game {
     }
     this._spawnNpcs();
     this._spawnWisps();
+    this.creatures.spawnWild();
+    if (new URLSearchParams(location.search).has('skip') || save.skipCutscene) {
+      save.seenTrain = true;
+    }
     this.running = true;
     this._clock.start();
     this.loop();
     this.ui.updateHud();
     this.ui.updateQuest();
-    if (!save.sorted) setTimeout(() => this.toast('Enter the Great Hall and approach the Crescent Mirror to sort'), 1200);
+
+    const skipCS = new URLSearchParams(location.search).has('skip') || save.skipCutscene;
+    if (!save.seenTrain && !skipCS) {
+      setTimeout(() => this.cutscenes.playTrainIntro(), 600);
+    } else if (!save.sorted) {
+      setTimeout(() => this.toast('Enter the Great Hall and approach the Crescent Mirror to sort'), 1200);
+    } else if (save.year && save.year > 1 && !save.seenYear?.[save.year]) {
+      setTimeout(() => {
+        this.cutscenes.playYear(save.year);
+        save.seenYear = save.seenYear || {};
+        save.seenYear[save.year] = true;
+        this.saveGame();
+      }, 800);
+    }
   }
 
   _spawnNpcs() {
@@ -80,6 +111,10 @@ export class Game {
       { id: 'rowan', name: 'Keeper Rowan', mesh: makeTutor(0x2a5030), pos: [72, 0, -5], talk: true },
       { id: 'pitch', name: 'Coach Nyx', mesh: makeTutor(0x4a3050), pos: [48, 0, 50], talk: true },
       { id: 'prefect', name: 'Prefect Cal', mesh: makeStudent({ house: 'stormcrown', skin: 2, hair: 1 }), pos: [5, 0, -40], talk: false },
+      { id: 'lira', name: 'Lira Fen', mesh: makeClassmate('mistvale'), pos: [8, 0, 14], talk: true, classmate: true },
+      { id: 'joren', name: 'Joren Ash', mesh: makeClassmate('emberforge'), pos: [-10, 0, 10], talk: true, classmate: true },
+      { id: 'sae', name: 'Sae Quill', mesh: makeClassmate('stormcrown'), pos: [4, 0, -8], talk: true, classmate: true },
+      { id: 'archivist', name: 'Archivist Moss', mesh: makeTutor(0x4a3a28), pos: [-55, 0, -8], talk: true },
     ];
     for (const n of list) {
       n.mesh.position.set(...n.pos);
@@ -94,7 +129,7 @@ export class Game {
     for (let i = 0; i < 8; i++) {
       const m = new THREE.Mesh(
         new THREE.SphereGeometry(0.35, 8, 8),
-        new THREE.MeshBasicMaterial({ color: 0xaaccff, transparent: true, opacity: 0.75 })
+        new THREE.MeshStandardMaterial({ color: 0xaaccff, emissive: 0x6688cc, emissiveIntensity: 1.2, transparent: true, opacity: 0.8 })
       );
       const x = 75 + Math.random() * 15, z = -20 + Math.random() * 30;
       m.position.set(x, 1.5 + Math.random(), z);
@@ -109,7 +144,6 @@ export class Game {
   }
 
   findTarget(origin, dir, range, coneDeg = 30) {
-    // Prefer duel foe
     if (this.duel.on && this.duel.foe) {
       const f = this.duel.foe;
       const to = f.pos.clone().sub(origin);
@@ -196,23 +230,47 @@ export class Game {
     this.player.rebuild(houseId);
     const h = HOUSES[houseId];
     this.quests.onSorted();
-    // unlock starter path
     this.spells.unlock('sparkbolt');
     document.getElementById('panel').style.display = 'none';
     this.toast(`${h.crest} Sorted into ${h.name}!`);
     this.fx.burst(this.player.pos.clone().add(new THREE.Vector3(0, 1.5, 0)), h.colors.secondary, 24);
     this.saveGame();
     this.ui.updateHud();
-    // move toward common room
-    setTimeout(() => this.toast(`Your common room is marked — follow the ${h.name} colours`), 2000);
+    setTimeout(() => this.toast(`Ask classmates for the timetable — then attend Charms`), 1800);
   }
 
   interact() {
-    if (this.secrets.tryInteract()) return;
-    // NPCs
+    if (this.cutscenes.on) { this.cutscenes.advance(); return; }
+    if (this.benches.trySit()) return;
+    if (this.creatures.tryInteract()) {
+      const S = this.save.creatures;
+      if (S.owned.length >= 1) this.quests.completeStep?.('beast_friend', 0);
+      if (S.plants.length >= 1) this.quests.completeStep?.('beast_friend', 1);
+      return;
+    }
+    // Detention lantern polish near courtyard posts
+    if (this.save.school?.detentionTask) {
+      const p = this.player.pos;
+      if (Math.abs(p.x) > 3 && Math.abs(p.x) < 8 && p.z > 0 && p.z < 55) {
+        this.schedule.detentionProgress();
+        this.fx.burst(p.clone().setY(2), 0xffe8a0, 8);
+        return;
+      }
+    }
+    // Attend class if near room during period
+    if (this.schedule.tryAttend()) {
+      this.quests.completeStep?.('timetable', 1);
+      return;
+    }
     for (const n of this.npcs) {
       if (this.player.pos.distanceTo(n.pos) < 3.2) {
         this.quests.talk(n.id);
+        if (n.classmate) {
+          this.schedule.learnSchedule();
+          this.quests.completeStep?.('timetable', 0);
+          this.toast(`${n.name}: "Here's today's timetable — don't skip or Prefect Cal gives detention."`);
+          return;
+        }
         if (n.id === 'brindle' && this.save.quests?.first_lesson?.step >= 2) {
           this.spells.unlock('wandrift');
           this.spells.unlock('hovercharm');
@@ -221,10 +279,36 @@ export class Game {
           this.saveGame();
         }
         if (n.id === 'brindle') this.spells.unlock('stunflare');
+        if (n.id === 'archivist') {
+          // unlock a few library spells
+          ['moonbolt', 'moonveil', 'aegis'].forEach(id => this.spells.unlock(id));
+          this.save.spells = [...this.spells.unlocked];
+          this.toast('Archivist Moss shares three Moon-school workings');
+          this.saveGame();
+        }
+        if (n.id === 'rowan') {
+          this.toast('Rowan: "Tame Edgewood creatures — rescue plants for training items."');
+        }
         return;
       }
     }
     this.trySort();
+  }
+
+  advanceYear() {
+    const y = Math.min(7, (this.save.year || 1) + 1);
+    this.save.year = y;
+    this.save.school.year = y;
+    this.save.seenYear = this.save.seenYear || {};
+    this.cutscenes.playYear(y);
+    this.save.seenYear[y] = true;
+    // unlock batch of spells by year
+    for (const [id, sp] of Object.entries(SPELLS)) {
+      if (sp.unlock <= y - 1) this.spells.unlock(id);
+    }
+    this.save.spells = [...this.spells.unlocked];
+    this.saveGame();
+    this.toast(`Welcome to Year ${y}`);
   }
 
   loop = () => {
@@ -235,14 +319,12 @@ export class Game {
     pollKeys();
     this.save.stats.time += dt;
 
-    // level-up soft
     while (this.save.xp >= this.save.lvl * 100) {
       this.save.xp -= this.save.lvl * 100;
       this.save.lvl++;
       this.save.maxHp = 100 + (this.save.lvl - 1) * 8;
       this.save.hp = this.save.maxHp;
       this.toast(`Level ${this.save.lvl}!`);
-      // unlock by level
       for (const [id, sp] of Object.entries(SPELLS)) {
         if (sp.unlock <= this.save.lvl - 1) this.spells.unlock(id);
       }
@@ -252,24 +334,22 @@ export class Game {
     this.spells.update(dt);
     this.duel.update(dt);
     this.secrets.update(dt);
+    this.schedule.update(dt);
+    this.creatures.update(dt);
 
-    // input actions
     if (consume('broom')) this.broom.toggle();
     if (IN.spellSlot >= 0) { this.spells.select(IN.spellSlot); IN.spellSlot = -1; }
     if (IN.shield) this.spells.raiseShield();
-    if (IN.cast && !this.player.frozen) {
+    if (IN.cast && !this.player.frozen && !this.cutscenes.on && !this.cards.on) {
       this.spells.tryCast();
-      // keep casting while held with small lock inside tryCast
     }
     if (consume('interact')) this.interact();
 
     if (this.broom.on) this.broom.update(dt, IN);
-    else this.player.update(dt, IN);
+    else if (!this.cutscenes.on) this.player.update(dt, IN);
 
-    // projectiles vs player / foe
     this._projHits();
 
-    // wisps
     for (const w of this.wisps) {
       if (!w.alive) continue;
       w.phase += dt;
@@ -288,16 +368,21 @@ export class Game {
     this.fx.update(dt);
     this.player.updateCamera(this.cam);
 
-    // day-ish sun sway
     const t = performance.now() * 0.00005;
     this.sun.position.set(Math.cos(t) * 70, 80, Math.sin(t) * 50);
 
     this._netT += dt;
     if (this._netT > 0.1) { this._netT = 0; this.net.tick(); }
 
-    this.ui.updateHud();
-    renderer.clear();
-    renderer.render(this.scene, this.cam);
+    this._hudClock += dt;
+    if (this._hudClock > 0.5) {
+      this._hudClock = 0;
+      this.ui.updateHud();
+      const clock = document.getElementById('clock');
+      if (clock) clock.textContent = this.schedule.clockText() + (this.save.school?.grade ? ` · ${this.save.school.grade}` : '');
+    }
+
+    renderFrame(this.scene, this.cam);
   };
 
   _projHits() {
