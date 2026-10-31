@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0c1020">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Arcane Spire: First Year</title>
+<meta name="description" content="An original 3D wizard-school adventure. Sort into a house, learn spells, duel in real time, fly brooms, and uncover secret passages at Crescentwick Academy.">
+<meta property="og:title" content="Arcane Spire: First Year">
+<meta property="og:description" content="Sort. Study. Duel. Soar. An original wizard-school action adventure.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230c1020'/%3E%3Cpath d='M40 18a14 14 0 1 0 0 28 12 12 0 1 1 0-28z' fill='%23e8d8a0'/%3E%3C/svg%3E">
+</head>
+<body>
+<div id="app"></div>
+
+<div id="logo" class="screen">
+  <div class="emblem">
+    <svg viewBox="0 0 200 200" width="140" height="140">
+      <defs><radialGradient id="mg" cx="50%" cy="45%"><stop offset="0" stop-color="#ffe9a8"/><stop offset="1" stop-color="#8866aa"/></radialGradient></defs>
+      <circle cx="100" cy="100" r="88" fill="none" stroke="url(#mg)" stroke-width="5"/>
+      <path d="M118 55a42 42 0 1 0 0 90 36 36 0 1 1 0-90z" fill="url(#mg)"/>
+      <path d="M100 130 L108 165 L100 155 L92 165Z" fill="#c8a050"/>
+    </svg>
+    <b>CRESCENTWICK</b><small>academy of arcana</small>
+  </div>
+</div>
+
+<div id="cover" class="screen">
+  <div class="title">
+    <div class="t1">ARCANE SPIRE</div>
+    <div class="t2">First Year</div>
+    <div class="t3">Crescentwick Academy</div>
+  </div>
+  <div class="tap"><b>TAP THE CREST</b><span>to begin your first year</span><em id="crewJoin"></em></div>
+  <div id="joinBox"><input id="joinCode" maxlength="8" autocapitalize="characters" autocomplete="off" placeholder="CHAMBER"><button id="joinGo">Join chamber</button></div>
+  <div class="foot">Original game · not affiliated with any franchise · <span id="qBtn">Quality: <b></b></span></div>
+</div>
+
+<div id="white" class="screen"></div>
+
+<div id="loading" class="screen">
+  <div class="lbar"><i></i></div><div class="ltxt">Lighting the lanterns…</div>
+</div>
+
+<div id="create" class="screen">
+  <div class="cbox">
+    <h1>Arrive at Crescentwick</h1>
+    <div id="cont"></div>
+    <label>Name</label><input id="cName" maxlength="16" placeholder="Your name" autocomplete="off">
+    <label>Complexion</label>
+    <select id="cSkin"><option value="0">Fair</option><option value="1">Warm</option><option value="2">Tan</option><option value="3">Brown</option><option value="4">Deep</option></select>
+    <label>Hair</label>
+    <select id="cHair"><option value="0">Black</option><option value="1">Brown</option><option value="2">Auburn</option><option value="3">Blonde</option><option value="4">Silver</option><option value="5">Violet</option><option value="6">Crimson</option></select>
+    <p class="dim">You'll be sorted into a house at the Crescent Mirror in the Great Hall.</p>
+    <button id="cGo" class="big">Enter the Gates ▶</button>
+  </div>
+</div>
+
+<div id="hud">
+  <div id="rotHint">📱↻ Turn your phone sideways for the best view<small>Not rotating? Turn off Portrait Orientation Lock</small><b onclick="this.parentElement.remove()">✕</b></div>
+  <div id="hurt"></div>
+  <div id="bars">
+    <div class="row"><b>HP</b><div class="track"><i id="hpbar"></i></div></div>
+    <div class="row"><b>ST</b><div class="track"><i id="stbar"></i></div></div>
+  </div>
+  <div id="stat"><div class="who"><span class="lv">Lv.<b id="lvl">1</b></span><span id="pname"></span></div><div id="phouse"></div></div>
+  <div id="qtrack"><b>Quest</b><span>—</span></div>
+  <div id="spells"></div>
+  <button id="bookBtn">📖</button>
+  <button id="menuBtn">Menu</button>
+</div>
+
+<div id="panel"></div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

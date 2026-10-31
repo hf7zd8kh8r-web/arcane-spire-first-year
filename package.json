@@ -1,0 +1,27 @@
+{
+  "name": "arcane-spire-first-year",
+  "version": "1.0.0",
+  "description": "Arcane Spire: First Year — original 3D wizard-school action adventure with co-op duels",
+  "main": "server/server.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm ci && npx vite build",
+    "build:local": "vite build",
+    "start": "node server/server.js",
+    "preview": "vite preview --port 4173 --host",
+    "server": "node server/server.js"
+  },
+  "dependencies": {
+    "three": "^0.186.1",
+    "vite": "^8.3.4",
+    "ws": "^8.22.0"
+  },
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}

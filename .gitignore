@@ -1,0 +1,11 @@
+node_modules/
+dist/
+server-data/
+shots/
+.env
+.env.*
+*.pem
+*.key
+*.log
+*.tmp
+.DS_Store
