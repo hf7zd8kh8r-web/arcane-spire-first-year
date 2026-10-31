@@ -2,7 +2,7 @@
 # Ship to Render: push main to GitHub, then ask Render to deploy that commit and wait until it is live.
 # Needs GITHUB_TOKEN and RENDER_API_KEY. usage: scripts/deploy.sh [service_id]
 set -e
-SID=${1:-${RENDER_SERVICE_ID:-}}
+SID=${1:-${RENDER_SERVICE_ID:-srv-dbik5atg1s2s73dfq5rg}}
 cd "$(git rev-parse --show-toplevel)"
 git push origin main
 if [ -z "$SID" ]; then echo "RENDER_SERVICE_ID / arg not set: pushed only"; exit 0; fi
