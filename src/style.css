@@ -137,3 +137,24 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c1020;color:#f0e8d
 .cf.down{opacity:.35}
 #travelmap .card{display:flex;flex-direction:column;gap:6px;text-align:left}
 #travelmap h2{text-align:center;font-family:Cinzel,serif;color:#e8d8a0}
+
+/* --- iOS movement safety / D-pad / unfreeze --- */
+#panel{pointer-events:none}
+#panel[style*="flex"],#panel[style*="block"]{pointer-events:auto}
+#cutscene,#cardbattle,#travelmap{pointer-events:none}
+#cutscene[style*="flex"],#cardbattle[style*="flex"],#travelmap[style*="flex"]{pointer-events:auto}
+#touch{touch-action:none;-webkit-user-select:none}
+#touch .zone{touch-action:none;-webkit-touch-callout:none}
+#touch .stick{opacity:.55;border:2px solid #ffe8a088;background:#fff3;box-shadow:0 0 12px #0006}
+#touch .stick.active{opacity:1;border-color:#ffe080;box-shadow:0 0 18px #c8a05088}
+#touch .stick i{background:#ffe8c0;border:2px solid #fff;box-shadow:0 2px 8px #0008}
+#dpad{pointer-events:auto;position:absolute;left:16px;bottom:calc(160px + env(safe-area-inset-bottom));width:132px;height:132px;z-index:14;touch-action:none}
+#dpad .dp{pointer-events:auto;position:absolute;width:44px;height:44px;border-radius:10px;border:2px solid #c8a050aa;background:#1a1840ee;color:#ffe080;font:inherit;font-weight:900;font-size:1rem;touch-action:none;-webkit-user-select:none}
+#dpad .dp.on{background:#6a4080;border-color:#ffe080;transform:scale(.95)}
+#dpU{left:44px;top:0}#dpD{left:44px;bottom:0}#dpL{left:0;top:44px}#dpR{right:0;top:44px}
+#unfreezeBtn{pointer-events:auto;position:absolute;top:calc(44px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:20;padding:8px 14px;border-radius:20px;border:1px solid #c8a050;background:#801818ee;color:#ffe8a0;font:inherit;font-weight:800;font-size:.72rem;white-space:nowrap;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#csSkip{background:#2a1840!important;border-color:#c8a05066!important;width:100%;margin-top:8px}
+#cutscene .cs-card button{min-height:48px;font-size:1rem}
+@media(min-width:900px){
+  #dpad,#unfreezeBtn{display:none}
+}

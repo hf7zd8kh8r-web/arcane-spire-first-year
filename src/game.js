@@ -1,5 +1,5 @@
 import { THREE, renderer, makeScene, makeCamera, qTick, applyQuality, qualityHooks, setupComposer, renderFrame } from './engine.js';
-import { IN, pollKeys, consume } from './input.js';
+import { IN, pollKeys, consume, setUnfreezeHandler, resetTouchAxes } from './input.js';
 import { buildCastle, groundY } from './castle.js';
 import { Player } from './player.js';
 import { Spellbook } from './spells.js';
@@ -54,9 +54,36 @@ export class Game {
       this.cam.updateProjectionMatrix();
     });
     applyQuality();
+    setUnfreezeHandler(() => this.unfreezeAll());
   }
 
   toast(msg, k) { this.ui.toast(msg, k); }
+
+  /** Clear every soft-lock that can strand an iPhone player. */
+  unfreezeAll() {
+    resetTouchAxes();
+    this.player.frozen = false;
+    this.player.fpMode = false;
+    if (this.player.mesh) this.player.mesh.visible = true;
+    this.cutscenes?.forceEnd?.();
+    this.cards?.close?.();
+    this.benches?.close?.();
+    this.ui?.close?.();
+    for (const id of ['cutscene', 'cardbattle', 'travelmap', 'panel']) {
+      const el = document.getElementById(id);
+      if (el) { el.style.display = 'none'; el.style.pointerEvents = 'none'; }
+    }
+    // End duel soft-lock without teleport glitch if mid-countdown
+    if (this.duel?.on && this.duel.phase === 'countdown') {
+      this.duel.hideCount?.();
+      this.duel.phase = 'fight';
+      this.player.frozen = false;
+    }
+    IN.enabled = true;
+    this.toast('Unfrozen — use the ▲◀▶▼ pad or drag left to move');
+    this.saveGame?.();
+  }
+
   saveGame() { if (this.save) ST.save(this.save); }
 
   start(save) {
@@ -346,7 +373,7 @@ export class Game {
     if (consume('interact')) this.interact();
 
     if (this.broom.on) this.broom.update(dt, IN);
-    else if (!this.cutscenes.on) this.player.update(dt, IN);
+    else this.player.update(dt, IN);  // frozen flag inside Player blocks move; cutscene must not skip the whole update
 
     this._projHits();
 

@@ -48,6 +48,7 @@ export class Cutscenes {
     this.lines = [];
     this.i = 0;
     this._el = null;
+    this._done = null;
   }
   playYear(year) {
     const sc = YEAR_SCENES[year] || YEAR_SCENES[1];
@@ -57,6 +58,9 @@ export class Cutscenes {
     });
   }
   playTrainIntro() {
+    // Mark seen immediately so a refresh mid-intro doesn't soft-lock forever
+    this.g.save.seenTrain = true;
+    this.g.saveGame?.();
     const lines = [
       'Night wind. Steel rails. A silver carriage called the Moonrail…',
       FRIENDS[0].line,
@@ -66,8 +70,6 @@ export class Cutscenes {
       'You gather your trunk. The castle lights bloom ahead.',
     ];
     this._play('The Moonrail', lines, () => {
-      this.g.save.seenTrain = true;
-      this.g.saveGame?.();
       this.g.toast?.('Find the Crescent Mirror in the Great Hall to sort');
     });
   }
@@ -77,12 +79,29 @@ export class Cutscenes {
     let el = document.getElementById('cutscene');
     if (!el) {
       el = document.createElement('div'); el.id = 'cutscene';
-      el.innerHTML = `<div class="cs-card"><h2></h2><p></p><button type="button" id="csNext">Continue</button></div>`;
+      el.innerHTML = `<div class="cs-card">
+        <h2></h2><p></p>
+        <button type="button" id="csNext">Tap to continue</button>
+        <button type="button" id="csSkip" class="skip">Skip intro ✦</button>
+      </div>`;
       document.body.appendChild(el);
-      el.querySelector('#csNext').onclick = () => this.advance();
-      el.addEventListener('pointerdown', e => { if (e.target.id !== 'csNext') this.advance(); });
+      const bind = (id, fn) => {
+        const b = el.querySelector(id);
+        const go = (e) => { e.preventDefault(); e.stopPropagation(); fn(); };
+        b.addEventListener('click', go);
+        b.addEventListener('touchend', go, { passive: false });
+      };
+      bind('#csNext', () => this.advance());
+      bind('#csSkip', () => this.forceEnd());
+      // Tap card background also advances (but not twice on button)
+      el.addEventListener('touchend', (e) => {
+        if (e.target.closest('button')) return;
+        e.preventDefault();
+        this.advance();
+      }, { passive: false });
     }
     el.style.display = 'flex';
+    el.style.pointerEvents = 'auto';
     el.querySelector('h2').textContent = title;
     el.querySelector('p').textContent = lines[0];
     this._el = el;
@@ -90,13 +109,22 @@ export class Cutscenes {
   advance() {
     if (!this.on) return;
     this.i++;
-    if (this.i >= this.lines.length) {
-      this.on = false;
-      if (this._el) this._el.style.display = 'none';
-      this.g.player.frozen = false;
-      this._done?.();
-      return;
-    }
+    if (this.i >= this.lines.length) { this.forceEnd(); return; }
     this._el.querySelector('p').textContent = this.lines[this.i];
+  }
+  /** Close cutscene, clear freeze, run completion once. Safe to call repeatedly. */
+  forceEnd() {
+    const was = this.on;
+    this.on = false;
+    this.i = this.lines.length;
+    if (this._el) {
+      this._el.style.display = 'none';
+      this._el.style.pointerEvents = 'none';
+    }
+    if (this.g.player) this.g.player.frozen = false;
+    if (was) {
+      const d = this._done; this._done = null;
+      try { d?.(); } catch (_) {}
+    }
   }
 }

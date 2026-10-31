@@ -73,7 +73,7 @@ export class UI {
   openMenu() {
     this.modal = 'menu';
     const panel = document.getElementById('panel');
-    panel.style.display = 'flex';
+    panel.style.display = 'flex'; panel.style.pointerEvents = 'auto'; panel.style.pointerEvents = 'auto';
     const known = this.game?.spells?.allKnown?.()?.length || this.game?.spells?.unlocked?.size || 0;
     panel.innerHTML = `
       <div class="card">
@@ -95,7 +95,7 @@ export class UI {
     this.modal = 'spellbook';
     const g = this.game;
     const panel = document.getElementById('panel');
-    panel.style.display = 'flex';
+    panel.style.display = 'flex'; panel.style.pointerEvents = 'auto';
     const known = g.spells.allKnown ? g.spells.allKnown() : [...g.spells.unlocked];
     const lockedN = SPELL_COUNT - known.length;
     const rows = known.map(id => {
@@ -111,7 +111,7 @@ export class UI {
     this.modal = 'quests';
     const g = this.game;
     const panel = document.getElementById('panel');
-    panel.style.display = 'flex';
+    panel.style.display = 'flex'; panel.style.pointerEvents = 'auto';
     const rows = QUESTS.map(q => {
       const st = g.save.quests?.[q.id] || { step: 0, done: false };
       return `<div class="srow ${st.done ? 'done' : ''}"><b>${q.type === 'secret' ? '‽' : '•'} ${q.name}</b><span>${st.done ? 'Complete' : q.steps[st.step]}</span></div>`;
@@ -122,7 +122,7 @@ export class UI {
   openDuelClub() {
     this.modal = 'duel';
     const panel = document.getElementById('panel');
-    panel.style.display = 'flex';
+    panel.style.display = 'flex'; panel.style.pointerEvents = 'auto';
     const rows = DUELISTS.map(d => {
       const h = HOUSES[d.house];
       return `<button data-act="duelnpc" data-id="${d.id}">⚔ ${d.name} <small>Lv.${d.lvl} · ${h.name}</small></button>`;
@@ -133,7 +133,7 @@ export class UI {
   offerDuel(m) {
     this.modal = 'duelask';
     const panel = document.getElementById('panel');
-    panel.style.display = 'flex';
+    panel.style.display = 'flex'; panel.style.pointerEvents = 'auto';
     panel.innerHTML = `<div class="card"><h2>Duel Challenge</h2><p>${m.name} challenges you!</p>
       <button data-act="duelok" data-id="${m.id}" data-name="${m.name}" data-house="${m.house}" data-lvl="${m.lvl}">Accept</button>
       <button data-act="duelno" data-id="${m.id}">Decline</button></div>`;
@@ -142,7 +142,7 @@ export class UI {
   close() {
     this.modal = null;
     const panel = document.getElementById('panel');
-    if (panel) panel.style.display = 'none';
+    if (panel) { panel.style.display = 'none'; panel.style.pointerEvents = 'none'; }
   }
 
   act(a, el) {
@@ -168,7 +168,7 @@ export class UI {
     else if (a === 'peers') {
       const peers = [...g.net.peers.values()];
       const panel = document.getElementById('panel');
-      panel.style.display = 'flex';
+      panel.style.display = 'flex'; panel.style.pointerEvents = 'auto';
       const rows = peers.length
         ? peers.map(p => `<button data-act="chal" data-id="${p.id}">Challenge ${p.name}</button>`).join('')
         : '<p class="dim">No one else in this chamber. Share a room code from the title screen.</p>';
@@ -183,7 +183,7 @@ export class UI {
     this.modal = 'timetable';
     const g = this.game;
     const panel = document.getElementById('panel');
-    panel.style.display = 'flex';
+    panel.style.display = 'flex'; panel.style.pointerEvents = 'auto';
     const cur = g.schedule.currentPeriod();
     const rows = PERIODS.map(p => {
       const on = cur && cur.id === p.id;

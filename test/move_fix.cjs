@@ -17,20 +17,23 @@ async function flow(label, viewport) {
   await p.waitForTimeout(400);
   await p.evaluate(() => {
     const g = __g.game;
-    if (g.cutscenes?.on) { g.cutscenes.on = false; g.player.frozen = false; const el = document.getElementById('cutscene'); if (el) el.style.display = 'none'; }
+    g.cutscenes?.forceEnd?.();
+    g.player.frozen = false;
     g.save.seenTrain = true;
   });
 
+  // Hit above D-pad (D-pad intentionally overlays bottom-left of zoneL)
   const hit = await p.evaluate(() => {
     const z = document.getElementById('zoneL');
     const r = z.getBoundingClientRect();
-    const cx = r.x + r.width * 0.5, cy = r.y + r.height * 0.75;
+    const cx = r.x + r.width * 0.55, cy = r.y + r.height * 0.35;
     const top = document.elementFromPoint(cx, cy);
     return {
       cx, cy,
       top: top && (top.id || top.className || top.tagName),
       isZone: !!(top && (top.id === 'zoneL' || top.closest?.('#zoneL') || top.id === 'stickL')),
-      rot: !!document.getElementById('rotHint'),
+      dpad: !!document.getElementById('dpad'),
+      unfreeze: !!document.getElementById('unfreezeBtn'),
       rotPE: document.getElementById('rotHint') ? getComputedStyle(document.getElementById('rotHint')).pointerEvents : null,
       pos: { x: __g.game.player.pos.x, z: __g.game.player.pos.z },
       enabled: __g.IN.enabled,
@@ -38,6 +41,8 @@ async function flow(label, viewport) {
   });
   console.log('hit-test', hit);
   if (!hit.isZone) throw new Error('zoneL blocked by ' + hit.top);
+  if (!hit.dpad) throw new Error('dpad missing');
+  if (!hit.unfreeze) throw new Error('unfreezeBtn missing');
 
   // Touch drag on left zone (move forward)
   const before = await p.evaluate(() => ({ x: __g.game.player.pos.x, z: __g.game.player.pos.z }));
@@ -58,6 +63,21 @@ async function flow(label, viewport) {
     const mk = (x,y) => new Touch({ identifier: 9, target: el, clientX: x, clientY: y });
     el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true, touches: [], changedTouches: [mk(0,0)] }));
   });
+
+  // D-pad forward
+  await p.evaluate(() => { __g.game.player.pos.set(0, 0, 18); __g.IN.mx=0; __g.IN.my=0; });
+  await p.evaluate(() => {
+    const b = document.getElementById('dpU');
+    b.dispatchEvent(new PointerEvent('pointerdown', { bubbles:true, cancelable:true, pointerId:7, pointerType:'touch', clientX:50, clientY:300 }));
+  });
+  await p.waitForTimeout(700);
+  await p.evaluate(() => {
+    document.getElementById('dpU').dispatchEvent(new PointerEvent('pointerup', { bubbles:true, cancelable:true, pointerId:7, pointerType:'touch' }));
+  });
+  const afterPad = await p.evaluate(() => ({ x: __g.game.player.pos.x, z: __g.game.player.pos.z }));
+  const pd = Math.hypot(afterPad.x, afterPad.z - 18);
+  console.log('dpad U', pd.toFixed(3), afterPad);
+  if (pd < 1.5) throw new Error('dpad move too small: ' + pd);
 
   // Keyboard
   await p.evaluate(() => { __g.game.player.pos.set(0, 0, 18); });
